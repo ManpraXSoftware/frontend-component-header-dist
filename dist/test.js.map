@@ -1,0 +1,1 @@
+{"version":3,"file":"test.js","names":["console","log"],"sources":["../src/test.js"],"sourcesContent":["console.log(\"testing js file\")"],"mappings":"AAAAA,OAAO,CAACC,GAAG,CAAC,iBAAiB,CAAC","ignoreList":[]}
