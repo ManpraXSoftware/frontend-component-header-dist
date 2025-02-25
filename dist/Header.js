@@ -224,10 +224,10 @@ class Header extends Component {
 
     const mx_localizekey = Array.isArray(getConfig().MX_LOCALIZEKEY) ? getConfig().MX_LOCALIZEKEY[0] : getConfig().MX_LOCALIZEKEY;
     console.log("localizer key", mx_localizekey);
-    const show_user_way = getConfig().SHOW_USER_WAY;
+    const show_user_way = getConfig().SHOW_USER_WAY[0];
     if (show_user_way == "True") {
       const script = document.createElement('script');
-      const user_way_key = getConfig().USER_WAY_KEY;
+      const user_way_key = getConfig().USER_WAY_KEY[0];
       script.src = 'https://cdn.userway.org/widget.js';
       script.setAttribute('data-account', user_way_key);
       script.async = true;
@@ -270,6 +270,7 @@ class Header extends Component {
     let selectTag = document.getElementById("langOptions");
     const lang_dict = [];
     localizeScript.onload = () => {
+      console.log("initialing localizer ...");
       Localize.initialize({
         key: mx_localizekey,
         rememberLanguage: true
