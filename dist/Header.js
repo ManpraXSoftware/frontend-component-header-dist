@@ -219,7 +219,11 @@ class Header extends Component {
       current_lang = 'en';
     }
     const jf = document.createElement('script');
-    const mx_localizekey = getConfig().MX_LOCALIZEKEY;
+
+    // const mx_localizekey = getConfig().MX_LOCALIZEKEY[0];
+
+    const mx_localizekey = Array.isArray(getConfig().MX_LOCALIZEKEY) ? getConfig().MX_LOCALIZEKEY[0] : getConfig().MX_LOCALIZEKEY;
+    console.log("localizer key", mx_localizekey);
     const show_user_way = getConfig().SHOW_USER_WAY;
     if (show_user_way == "True") {
       const script = document.createElement('script');
@@ -381,19 +385,22 @@ class Header extends Component {
 
       //  LTS WAT Code START : DO NOT REMOVE or MODIFY 
       //  Create and append the LTS script
-      const ltsScript = document.createElement('script');
-      ltsScript.src = `https://lts.lb.gcloud.letstalksign.org/script/lts-load-lms-V1-OB.js?auth_api=${getConfig().LMS_BASE_URL}/letstalksign/authenticate`;
-      ltsScript.async = true;
-      document.body.appendChild(ltsScript);
+      // const ltsScript = document.createElement('script');
+      // ltsScript.src = `https://lts.lb.gcloud.letstalksign.org/script/lts-load-lms-V1-OB.js?auth_api=${getConfig().LMS_BASE_URL}/letstalksign/authenticate`;
+      // ltsScript.async = true;
+      // document.body.appendChild(ltsScript);
       //  LTS WAT Code END : DO NOT REMOVE or MODIFY 
     }
-    if (document.readyState === 'complete') {
-      console.log('DOM and all resources have fully loaded');
-    } else if (document.readyState === 'interactive') {
-      console.log('DOM fully loaded and parsed, but resources may still be loading');
-    } else {
-      console.log('DOM is still loading');
-    }
+
+    // if (document.readyState === 'complete') {
+    //   console.log('DOM and all resources have fully loaded');
+    // } else if (document.readyState === 'interactive') {
+    //     console.log('DOM fully loaded and parsed, but resources may still be loading');
+
+    // } else {
+    //     console.log('DOM is still loading');
+
+    // }
   }
   render() {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("header", {
