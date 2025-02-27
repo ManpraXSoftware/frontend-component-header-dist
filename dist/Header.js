@@ -223,7 +223,9 @@ class Header extends Component {
     // const mx_localizekey = getConfig().MX_LOCALIZEKEY[0];
 
     const mx_localizekey = Array.isArray(getConfig().MX_LOCALIZEKEY) ? getConfig().MX_LOCALIZEKEY[0] : getConfig().MX_LOCALIZEKEY;
-    console.log("localizer key", mx_localizekey);
+
+    // console.log("localizer key", mx_localizekey)
+
     const show_user_way = getConfig().SHOW_USER_WAY[0];
     if (show_user_way == "True") {
       const script = document.createElement('script');
