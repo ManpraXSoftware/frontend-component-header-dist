@@ -462,7 +462,7 @@ class Header extends Component {
   render() {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("a", {
       className: "stmc",
-      href: "#mx-main"
+      href: window.location.href.includes('/learning/course/') ? '#mx-main' : '#main'
     }, "Skip to main content"), /*#__PURE__*/React.createElement("header", {
       className: "global-header",
       id: "nett-head"
