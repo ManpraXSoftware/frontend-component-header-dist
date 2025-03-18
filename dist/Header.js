@@ -203,7 +203,8 @@ class Header extends Component {
       window.location.href = loginUrl;
       return; // Stop further execution
     }
-    console.log("site domain", getConfig().SITE_DOMAIN, getConfig().EXPLORE_COURSE_URL);
+    // console.log("site domain", getConfig().SITE_DOMAIN,getConfig().EXPLORE_COURSE_URL )
+
     const search_query = new URLSearchParams(location.search).get("text");
     this.setState({
       setText: search_query || ''
@@ -219,13 +220,7 @@ class Header extends Component {
       current_lang = 'en';
     }
     const jf = document.createElement('script');
-
-    // const mx_localizekey = getConfig().MX_LOCALIZEKEY[0];
-
     const mx_localizekey = Array.isArray(getConfig().MX_LOCALIZEKEY) ? getConfig().MX_LOCALIZEKEY[0] : getConfig().MX_LOCALIZEKEY;
-
-    // console.log("localizer key", mx_localizekey)
-
     const show_user_way = getConfig().SHOW_USER_WAY[0];
     if (show_user_way == "True") {
       const script = document.createElement('script');
@@ -369,6 +364,20 @@ class Header extends Component {
           }
         }
       });
+
+      // Add #main in iframe URL 
+
+      // const iframe = document.getElementById('unit-iframe');
+      // const iframeSrc = iframe?.getAttribute('src');
+
+      // if (iframe && iframeSrc) {
+      //   const parentUrlHash = window.location.hash;
+
+      //   if (parentUrlHash === '#main' && !iframeSrc.includes('#main')) {
+      //     const updatedSrc = `${iframeSrc}#main`;
+      //     iframe.setAttribute('src', updatedSrc);
+      //   }
+      // }
     };
     this.setState({
       darkLanguages: darkLang
@@ -405,8 +414,56 @@ class Header extends Component {
 
     // }
   }
+  // componentWillUnmount() {
+  //   // Clean up event listener when the component is unmounted
+  //   const skipLink = document.querySelector('.stmc');
+  //   if (skipLink) {
+  //     skipLink.removeEventListener('click', this.handleSkipToMainContent);
+  //   }
+  // }
+
+  // handleSkipToMainContent = (e) => {
+  //   e.preventDefault();
+
+  //   const iframe = document.getElementById('unit-iframe');
+  //   const iframeSrc = iframe?.getAttribute('src');
+
+  //   if (iframe && iframeSrc) {
+  //     // Add #main to the iframe src if not already present
+  //     if (!iframeSrc.includes('#main')) {
+  //       const newIframeUrl = `${iframeSrc}#main`;
+  //       iframe.setAttribute('src', newIframeUrl);
+  //     }
+
+  //     // Focus on iframe
+  //     iframe.scrollIntoView({ behavior: 'smooth' });
+  //     iframe.focus();
+  //   } else {
+  //     console.error("Iframe with ID 'unit-iframe' not found or missing 'src'.");
+  //   }
+  // };
+
+  // Automatically append #main to iframe src if parent URL includes it
+  // document.addEventListener('DOMContentLoaded', () => {
+  //   const iframe = document.getElementById('unit-iframe');
+  //   const iframeSrc = iframe?.getAttribute('src');
+
+  //   if (iframe && iframeSrc) {
+  //     const parentUrlHash = window.location.hash;
+
+  //     // Add #main to the iframe src if the parent URL contains #main
+  //     if (parentUrlHash === '#main' && !iframeSrc.includes('#main')) {
+  //       const updatedSrc = `${iframeSrc}#main`;
+  //       iframe.setAttribute('src', updatedSrc);
+  //     }
+  //   }
+  // });
+
   render() {
-    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("header", {
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("a", {
+      className: "stmc",
+      href: "#mx-main"
+    }, "Skip to main content"), /*#__PURE__*/React.createElement("header", {
       className: "global-header",
       id: "nett-head"
     }, /*#__PURE__*/React.createElement("div", {
