@@ -13,6 +13,29 @@ import $ from 'jquery';
 class Header extends Component {
   constructor(props) {
     super(props);
+    _defineProperty(this, "handleClickOutside", event => {
+      const userMenu = document.getElementById("user-menu");
+      const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
+
+      // Check if click is outside the dropdown and it's currently open
+      if (userMenu && !userMenu.classList.contains("hidden") && !event.target.closest('.secondary') && !event.target.closest('#user-menu')) {
+        userMenu.classList.add("hidden");
+        toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+      }
+    });
+    _defineProperty(this, "handleKeyDown", event => {
+      const userMenu = document.getElementById("user-menu");
+      const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
+
+      // Check if Escape key is pressed (key code 27)
+      if (event.key === 'Escape' && userMenu && !userMenu.classList.contains("hidden")) {
+        userMenu.classList.add("hidden");
+        toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+        // Optional: Return focus to the toggle button
+        const toggleButton = document.querySelector(".toggle-user-dropdown");
+        if (toggleButton) toggleButton.focus();
+      }
+    });
     _defineProperty(this, "handleLangOptionsClick", e => {
       e.preventDefault();
       e.stopPropagation();
@@ -151,20 +174,6 @@ class Header extends Component {
       } else {
         window.location.reload();
       }
-
-      // if (all_darkLangs_dict.includes(setLang) && setLang != 'en') {
-      //   if (current_url.includes('/explore-courses/explore-programs') || current_url.includes('/explore-courses/explore-topics/') || current_url.includes('/courses/course-'))
-
-      //     window.location.href = window.location.origin + '/explore-courses/#main';
-      //   else
-      //     window.location.reload()
-
-      // }
-
-      // if ((!(all_darkLangs_dict.includes(setLang)) || setLang == 'en')) {
-      //   window.location.reload()
-      // }
-
       Localize.setLanguage(setLang);
       $('#langOptions > option').each(function () {
         if (setLang == $(this).val()) {
@@ -192,6 +201,7 @@ class Header extends Component {
       lang_key: '',
       setText: ''
     };
+    this.dropdownRef = /*#__PURE__*/React.createRef();
   }
   componentDidMount() {
     var darkLang = [];
@@ -203,6 +213,7 @@ class Header extends Component {
       window.location.href = loginUrl;
       return; // Stop further execution
     }
+
     // console.log("site domain", getConfig().SITE_DOMAIN,getConfig().EXPLORE_COURSE_URL )
 
     const search_query = new URLSearchParams(location.search).get("text");
@@ -394,7 +405,6 @@ class Header extends Component {
     let current_url = window.location.href;
     if (current_url.includes('learning/course/')) {
       $(".myLang").hide();
-
       //  LTS WAT Code START : DO NOT REMOVE or MODIFY 
       //  Create and append the LTS script
       // const ltsScript = document.createElement('script');
@@ -413,52 +423,16 @@ class Header extends Component {
     //     console.log('DOM is still loading');
 
     // }
+
+    // Add document click listener
+    document.addEventListener('click', this.handleClickOutside);
+    document.addEventListener('keydown', this.handleKeyDown);
   }
-  // componentWillUnmount() {
-  //   // Clean up event listener when the component is unmounted
-  //   const skipLink = document.querySelector('.stmc');
-  //   if (skipLink) {
-  //     skipLink.removeEventListener('click', this.handleSkipToMainContent);
-  //   }
-  // }
-
-  // handleSkipToMainContent = (e) => {
-  //   e.preventDefault();
-
-  //   const iframe = document.getElementById('unit-iframe');
-  //   const iframeSrc = iframe?.getAttribute('src');
-
-  //   if (iframe && iframeSrc) {
-  //     // Add #main to the iframe src if not already present
-  //     if (!iframeSrc.includes('#main')) {
-  //       const newIframeUrl = `${iframeSrc}#main`;
-  //       iframe.setAttribute('src', newIframeUrl);
-  //     }
-
-  //     // Focus on iframe
-  //     iframe.scrollIntoView({ behavior: 'smooth' });
-  //     iframe.focus();
-  //   } else {
-  //     console.error("Iframe with ID 'unit-iframe' not found or missing 'src'.");
-  //   }
-  // };
-
-  // Automatically append #main to iframe src if parent URL includes it
-  // document.addEventListener('DOMContentLoaded', () => {
-  //   const iframe = document.getElementById('unit-iframe');
-  //   const iframeSrc = iframe?.getAttribute('src');
-
-  //   if (iframe && iframeSrc) {
-  //     const parentUrlHash = window.location.hash;
-
-  //     // Add #main to the iframe src if the parent URL contains #main
-  //     if (parentUrlHash === '#main' && !iframeSrc.includes('#main')) {
-  //       const updatedSrc = `${iframeSrc}#main`;
-  //       iframe.setAttribute('src', updatedSrc);
-  //     }
-  //   }
-  // });
-
+  componentWillUnmount() {
+    // Clean up the event listener
+    document.removeEventListener('click', this.handleClickOutside);
+    document.removeEventListener('keydown', this.handleKeyDown);
+  }
   render() {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("a", {
       className: "stmc",
@@ -537,7 +511,11 @@ class Header extends Component {
     }))))))), /*#__PURE__*/React.createElement("div", {
       className: "secondary",
       onClick: e => {
-        document.getElementById("user-menu").classList.toggle("hidden");
+        const userMenu = document.getElementById("user-menu");
+        const isHidden = userMenu.classList.contains("hidden");
+        userMenu.classList.toggle("hidden");
+        const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
+        toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", !isHidden));
       }
     }, /*#__PURE__*/React.createElement("div", {
       className: "nav-item hidden-mobile user_custom_login toggle-user-dropdown",
