@@ -212,6 +212,7 @@ class Header extends Component {
       if (searchData != "") {
         let url = getConfig().EXPLORE_COURSE_URL[0] + `/search?text=${searchData}`;
         window.location = url;
+        $('.enter').val('');
       }
     });
     this.state = {
