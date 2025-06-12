@@ -12,7 +12,7 @@ const HeaderLogo = () => {
   }, /*#__PURE__*/React.createElement("img", {
     className: "logo",
     src: logo,
-    alt: "Subodha Home Page"
+    alt: "Subodha logo"
   })));
 };
 export default HeaderLogo;
