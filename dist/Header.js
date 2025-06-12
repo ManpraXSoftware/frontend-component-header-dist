@@ -13,27 +13,47 @@ import $ from 'jquery';
 class Header extends Component {
   constructor(props) {
     super(props);
+    // method to toggle mobile menu
+    _defineProperty(this, "toggleMobileMenu", () => {
+      this.setState(prevState => ({
+        isMobileMenuOpen: !prevState.isMobileMenuOpen
+      }));
+    });
     _defineProperty(this, "handleClickOutside", event => {
       const userMenu = document.getElementById("user-menu");
       const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
-
-      // Check if click is outside the dropdown and it's currently open
+      const mobileMenu = document.getElementById("mobile-menu");
+      const hamburgerButton = document.querySelector(".hamburger-menu");
       if (userMenu && !userMenu.classList.contains("hidden") && !event.target.closest('.secondary') && !event.target.closest('#user-menu')) {
         userMenu.classList.add("hidden");
         toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+      }
+      if (this.state.isMobileMenuOpen && mobileMenu && !event.target.closest('#mobile-menu') && !event.target.closest('.hamburger-menu')) {
+        this.setState({
+          isMobileMenuOpen: false
+        });
+        hamburgerButton.setAttribute("aria-expanded", "false");
       }
     });
     _defineProperty(this, "handleKeyDown", event => {
       const userMenu = document.getElementById("user-menu");
       const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
-
-      // Check if Escape key is pressed (key code 27)
-      if (event.key === 'Escape' && userMenu && !userMenu.classList.contains("hidden")) {
-        userMenu.classList.add("hidden");
-        toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
-        // Optional: Return focus to the toggle button
-        const toggleButton = document.querySelector(".toggle-user-dropdown");
-        if (toggleButton) toggleButton.focus();
+      const mobileMenu = document.getElementById("mobile-menu");
+      const hamburgerButton = document.querySelector(".hamburger-menu");
+      if (event.key === 'Escape') {
+        if (userMenu && !userMenu.classList.contains("hidden")) {
+          userMenu.classList.add("hidden");
+          toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+          const toggleButton = document.querySelector(".toggle-user-dropdown");
+          if (toggleButton) toggleButton.focus();
+        }
+        if (this.state.isMobileMenuOpen && mobileMenu) {
+          this.setState({
+            isMobileMenuOpen: false
+          });
+          hamburgerButton.setAttribute("aria-expanded", "false");
+          hamburgerButton.focus();
+        }
       }
     });
     _defineProperty(this, "handleLangOptionsClick", e => {
@@ -219,7 +239,10 @@ class Header extends Component {
       darkLanguages: [],
       languages: [],
       lang_key: '',
-      setText: ''
+      setText: '',
+      isMobileMenuOpen: false,
+      resumeCourseUrl: null,
+      profileUrl: ''
     };
     this.dropdownRef = /*#__PURE__*/React.createRef();
   }
@@ -238,6 +261,7 @@ class Header extends Component {
 
     // const search_query = new URLSearchParams(location.search).get("text");
     // this.setState({ setText: search_query || '' }); // Fallback to an empty string
+
     if (!this.state.setText) {
       const search_query = new URLSearchParams(location.search).get("text");
       this.setState({
@@ -322,7 +346,10 @@ class Header extends Component {
             } else if (e.code == "en") {
               lang_name = e.name + "(English)";
             } else if (e.code == "ta-IN") {
-              lang_name = e.name + "(Tamil (India))";
+              // lang_name = e.name + "(Tamil (India))"
+              lang_name = "தமிழ்(Tamil)";
+              // const cleanedName = e.name.replace(/\s*\(India\)/, "");
+              // lang_name = cleanedName + "(Tamil)"
             } else if (e.code == "or") {
               lang_name = e.name + "(Odia)";
             } else if (e.code == "ml-IN" || e.code == "ml") {
@@ -348,6 +375,10 @@ class Header extends Component {
           dashboardDiv.parentNode.insertBefore(newDiv, dashboardDiv);
         }
         ;
+        this.setState({
+          resumeCourseUrl: res.data.resume_block || null,
+          profileUrl: `${getConfig().ACCOUNT_PROFILE_URL}/u/${res.data.username}`
+        });
         for (let i = 0; i < res.data.dark_languages.length; i++) {
           var code = res.data.dark_languages[i][0];
           var name = res.data.dark_languages[i][1];
@@ -361,7 +392,10 @@ class Header extends Component {
             } else if (code == "en") {
               name = name + "(English)";
             } else if (code == "ta-IN") {
-              name = name + "(Tamil (India))";
+              // name = name + "(Tamil (India))"
+              // const cleanedName = name.replace(/\s*\(India\)/, "");
+              // name = cleanedName + "(Tamil)"
+              name = "தமிழ்(Tamil)";
             } else if (code == "or") {
               name = name + "(Odia)";
             } else if (code == "ml-IN" || code == "ml") {
@@ -467,12 +501,19 @@ class Header extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       className: "main-header"
     }, /*#__PURE__*/React.createElement(HeaderLogo, null), /*#__PURE__*/React.createElement("div", {
-      className: "hamburger-menu",
+      className: `hamburger-menu ${this.state.isMobileMenuOpen ? 'open' : ''}`,
       role: "button",
       "aria-label": "Options Menu",
-      "aria-expanded": false,
+      "aria-expanded": this.state.isMobileMenuOpen,
       "aria-controls": "mobile-menu",
-      tabIndex: 0
+      tabIndex: 0,
+      onClick: this.toggleMobileMenu,
+      onKeyDown: e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.toggleMobileMenu();
+        }
+      }
     }, /*#__PURE__*/React.createElement("span", {
       className: "line"
     }), /*#__PURE__*/React.createElement("span", {
@@ -599,7 +640,42 @@ class Header extends Component {
     }, /*#__PURE__*/React.createElement("a", {
       href: getConfig().LOGOUT_URL,
       role: "menuitem"
-    }, "Sign Out")))))))));
+    }, "Sign Out")))))), /*#__PURE__*/React.createElement("div", {
+      className: `mobile-menu ${this.state.isMobileMenuOpen ? '' : 'hidden'}`,
+      "aria-label": "More",
+      role: "menu",
+      id: "mobile-menu"
+    }, this.state.resumeCourseUrl && /*#__PURE__*/React.createElement("div", {
+      className: "mobile-nav-item dropdown-item dropdown-nav-item mobile-nav-link"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: this.state.resumeCourseUrl,
+      role: "menuitem"
+    }, "Resume your last course")), /*#__PURE__*/React.createElement("div", {
+      className: "mobile-nav-item dropdown-item dropdown-nav-item mobile-nav-link"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: "/explore-courses/",
+      role: "menuitem"
+    }, "Explore Courses")), /*#__PURE__*/React.createElement("div", {
+      className: "mobile-nav-item dropdown-item dropdown-nav-item mobile-nav-link"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: `${getConfig().LMS_BASE_URL}/dashboard/programs/`,
+      role: "menuitem"
+    }, "Dashboard")), /*#__PURE__*/React.createElement("div", {
+      className: "mobile-nav-item dropdown-item dropdown-nav-item mobile-nav-link"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: this.state.profileUrl,
+      role: "menuitem"
+    }, "Profile")), /*#__PURE__*/React.createElement("div", {
+      className: "mobile-nav-item dropdown-item dropdown-nav-item mobile-nav-link"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: getConfig().ACCOUNT_SETTINGS_URL,
+      role: "menuitem"
+    }, "Account")), /*#__PURE__*/React.createElement("div", {
+      className: "mobile-nav-item dropdown-item dropdown-nav-item mobile-nav-link"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: getConfig().LOGOUT_URL,
+      role: "menuitem"
+    }, "Sign Out"))))));
   }
 }
 _defineProperty(Header, "contextType", AppContext);
