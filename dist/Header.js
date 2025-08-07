@@ -605,7 +605,8 @@ class Header extends Component {
       onTextUpdate: text => this.setState({
         setText: text
       }),
-      exploreCourseUrl: getConfig().EXPLORE_COURSE_URL[0]
+      exploreCourseUrl: getConfig().EXPLORE_COURSE_URL[0],
+      searchLabel: "mx-header"
     }), /*#__PURE__*/React.createElement("input", {
       type: "submit",
       value: "",

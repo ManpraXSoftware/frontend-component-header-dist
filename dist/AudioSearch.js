@@ -961,7 +961,7 @@ class AudioSearch extends Component {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
       type: "button",
       onClick: () => this.handleAudioSearch(true),
-      className: `mic-btn border ${this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current ? 'bg-gray-300' : 'bg-white'} hover:bg-gray-100`,
+      className: `mic-btn border ${this.props.searchLabel} ${this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current ? 'bg-gray-300' : 'bg-white'} hover:bg-gray-100`,
       disabled: this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current,
       "aria-label": "Voice search"
     }, /*#__PURE__*/React.createElement(FontAwesomeIcon, {
