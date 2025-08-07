@@ -1007,9 +1007,21 @@ class AudioSearch extends Component {
         if (this.state.finalText || this.state.interimText) {
           const searchText = this.state.finalText || this.state.interimText;
           this.props.onTextUpdate(searchText);
-          let url = this.props.exploreCourseUrl + `/search?text=${encodeURIComponent(searchText)}`;
-          window.location = url;
-          this.handleStopRecording();
+          // let url = this.props.exploreCourseUrl + `/search?text=${encodeURIComponent(searchText)}`;
+          // window.location = url;
+          // this.handleStopRecording();
+          if (this.props.exploreCourseUrl) {
+            const url = `${this.props.exploreCourseUrl}/search?text=${encodeURIComponent(searchText)}`;
+            console.log('Redirecting to:', url, {
+              timestamp: new Date().toISOString()
+            });
+            window.location = url;
+          } else {
+            console.log('No redirection, closing modal', {
+              timestamp: new Date().toISOString()
+            });
+            this.handleStopRecording();
+          }
         }
       },
       className: "btn",
@@ -1020,15 +1032,7 @@ class AudioSearch extends Component {
       className: "btn",
       disabled: !this.state.canRespeak,
       "aria-label": "Respeak"
-    }, "Respeak"), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      onClick: this.handleStopRecording,
-      className: "btn",
-      disabled: this.isStoppingRef.current,
-      "aria-label": "Stop recording"
-    }, /*#__PURE__*/React.createElement(FontAwesomeIcon, {
-      icon: faStop
-    }), " Stop"))))));
+    }, "Respeak"))))));
   }
 }
 export default AudioSearch;
