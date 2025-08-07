@@ -10,9 +10,21 @@ import { AppContext } from '@edx/frontend-platform/react';
 import { getConfig } from '@edx/frontend-platform';
 import CaretDropDownIcon from './Icons';
 import $ from 'jquery';
+import AudioSearch from './AudioSearch';
 class Header extends Component {
   constructor(props) {
     super(props);
+    _defineProperty(this, "handleSearchClick", e => {
+      e.preventDefault();
+      let searchData = this.state.setText;
+      if (searchData !== '') {
+        let url = getConfig().EXPLORE_COURSE_URL[0] + `/search?text=${encodeURIComponent(searchData)}`;
+        window.location = url;
+        this.setState({
+          setText: ''
+        });
+      }
+    });
     // method to toggle mobile menu
     _defineProperty(this, "toggleMobileMenu", () => {
       this.setState(prevState => ({
@@ -485,9 +497,22 @@ class Header extends Component {
     // Add document click listener
     document.addEventListener('click', this.handleClickOutside);
     document.addEventListener('keydown', this.handleKeyDown);
+
+    // Cleanup for modal
+    // Add ESC key listener
+    // this.handleEscKey = (event) => {
+    //   if (event.key === 'Escape' && this.state.showModal && !this.isStoppingRef.current) {
+    //     event.stopPropagation();
+    //     event.preventDefault();
+    //     console.log('ESC key event triggered, showModal:', this.state.showModal);
+    //     this.handleStopRecording();
+    //   }
+    // };
+    // document.addEventListener('keydown', this.handleEscKey);
+
+    // document.addEventListener('keydown', this.handleEscKey, { capture: true });
   }
   componentWillUnmount() {
-    // Clean up the event listener
     document.removeEventListener('click', this.handleClickOutside);
     document.removeEventListener('keydown', this.handleKeyDown);
   }
@@ -568,6 +593,19 @@ class Header extends Component {
       name: "Search for topic of interest",
       placeholder: "Search for topic of interest",
       className: "enter"
+    }), /*#__PURE__*/React.createElement(AudioSearch
+    // currentLang={this.current_lang}
+    , {
+      currentLang: Cookies.get('lang', {
+        domain: getConfig().SITE_DOMAIN[0],
+        path: '/',
+        secure: false,
+        sameSite: 'Lax'
+      }) || 'en',
+      onTextUpdate: text => this.setState({
+        setText: text
+      }),
+      exploreCourseUrl: getConfig().EXPLORE_COURSE_URL[0]
     }), /*#__PURE__*/React.createElement("input", {
       type: "submit",
       value: "",
