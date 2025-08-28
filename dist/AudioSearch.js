@@ -10,6 +10,93 @@ class AudioSearch extends Component {
     var _this;
     super(props);
     _this = this;
+    _defineProperty(this, "trapFocusInModal", function () {
+      let shouldTrap = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+      const modal = document.querySelector('.voice-modal');
+      if (shouldTrap && modal) {
+        const modalNodes = Array.from(modal.querySelectorAll('*'));
+        // Comprehensive selector for all focusable elements
+        const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], area[href], details, summary, iframe, object, embed';
+        const nonModalNodes = Array.from(document.querySelectorAll(`body *:not(.voice-modal):not(.voice-modal *)`)).filter(node => node.matches(focusableSelector));
+        _this.nonModalNodes = [];
+        for (let i = 0; i < nonModalNodes.length; i++) {
+          const node = nonModalNodes[i];
+          if (!modalNodes.includes(node)) {
+            // Store whether the element had a tabindex explicitly set
+            node._prevTabindex = node.hasAttribute('tabindex') ? node.getAttribute('tabindex') : 'none';
+            node.setAttribute('tabindex', '-1');
+            node.style.outline = 'none';
+            _this.nonModalNodes.push(node);
+          }
+        }
+        const firstFocusable = modal.querySelector('button.btn-close');
+        if (firstFocusable) {
+          firstFocusable.focus();
+        }
+        console.log('Focus trap applied for Voice Search modal', {
+          modalNodes: modalNodes.length,
+          nonModalNodes: nonModalNodes.length,
+          focusableElements: nonModalNodes.map(node => ({
+            tag: node.tagName,
+            id: node.id,
+            class: node.className,
+            tabindex: node._prevTabindex
+          })),
+          timestamp: new Date().toISOString()
+        });
+      } else if (!shouldTrap && _this.nonModalNodes.length > 0) {
+        const failedRestorations = [];
+        for (let i = 0; i < _this.nonModalNodes.length; i++) {
+          const node = _this.nonModalNodes[i];
+          if (node._prevTabindex !== 'none') {
+            node.setAttribute('tabindex', node._prevTabindex);
+          } else {
+            node.removeAttribute('tabindex');
+          }
+          node.style.outline = '';
+          // Verify restoration
+          if (node.hasAttribute('tabindex') && node.getAttribute('tabindex') === '-1') {
+            failedRestorations.push({
+              tag: node.tagName,
+              id: node.id,
+              class: node.className
+            });
+          }
+          node._prevTabindex = null; // Clear stored property
+        }
+        console.log('Tabindex restored for non-modal elements', {
+          restoredNodes: _this.nonModalNodes.length,
+          failedRestorations,
+          timestamp: new Date().toISOString()
+        });
+
+        // Focus the microphone button to ensure tab navigation resumes
+        const micButton = document.querySelector('button.mic-btn');
+        if (micButton && !micButton.disabled) {
+          micButton.focus();
+          console.log('Focused microphone button after modal close', {
+            tag: micButton.tagName,
+            id: micButton.id,
+            class: micButton.className,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          // Fallback to first focusable element on the page
+          const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"], [contenteditable="true"], area[href], summary';
+          const firstPageFocusable = document.querySelector(focusableSelector);
+          if (firstPageFocusable) {
+            firstPageFocusable.focus();
+            console.log('Focused first page element after modal close', {
+              tag: firstPageFocusable.tagName,
+              id: firstPageFocusable.id,
+              class: firstPageFocusable.className,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
+        _this.nonModalNodes = [];
+      }
+    });
     _defineProperty(this, "clearAllTimeouts", () => {
       if (this.recordingTimeoutRef.current) {
         clearTimeout(this.recordingTimeoutRef.current);
@@ -529,6 +616,9 @@ class AudioSearch extends Component {
             isListening: false,
             canRespeak: true
           });
+          _this.audioChunksRef.current = [];
+          _this.isStartingRef.current = false;
+          _this.isStoppingRef.current = false;
           // alert(`Speech recognition error: ${event.error}. Please check microphone permissions or try again.`);
           _this.handleStopRecording();
         };
@@ -629,6 +719,9 @@ class AudioSearch extends Component {
               showModal: true,
               canRespeak: true
             });
+            _this.audioChunksRef.current = [];
+            _this.isStartingRef.current = false;
+            _this.isStoppingRef.current = false;
             _this.handleStopRecording();
           }
         }, 10000);
@@ -759,6 +852,9 @@ class AudioSearch extends Component {
       });
       this.isStartingRef.current = false;
       this.isStoppingRef.current = false;
+
+      // Restore focusability for non-modal elements
+      this.trapFocusInModal(false);
       console.log('Stop recording completed', {
         isStarting: this.isStartingRef.current,
         isStopping: this.isStoppingRef.current,
@@ -911,6 +1007,12 @@ class AudioSearch extends Component {
     this.audioChunksRef.current = [];
     this.isStoppingRef.current = false;
     this.isStartingRef.current = false;
+    this.nonModalNodes = []; // Store nodes for focus trap restoration
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.showModal && !prevState.showModal) {
+      this.trapFocusInModal(true);
+    }
   }
   componentDidMount() {
     document.addEventListener('keydown', this.handleEscKey);
@@ -931,19 +1033,11 @@ class AudioSearch extends Component {
     this.clearAllTimeouts();
   }
   render() {
-    // console.log('AudioSearch render', { 
-    //   showModal: this.state.showModal, 
-    //   isListening: this.state.isListening, 
-    //   refs: { isStarting: this.isStartingRef.current, isStopping: this.isStoppingRef.current }, 
-    //   timestamp: new Date().toISOString(),
-    // });
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
       type: "button",
       onClick: () => this.handleAudioSearch(true),
       className: `mic-btn border ${this.props.searchLabel} ${this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current ? 'bg-gray-300' : 'bg-white'} hover:bg-gray-100`,
-      disabled: this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current
-      // disabled={this.state.isListening}
-      ,
+      disabled: this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current,
       "aria-label": "Voice search"
     }, /*#__PURE__*/React.createElement(FontAwesomeIcon, {
       icon: faMicrophone
@@ -1005,9 +1099,7 @@ class AudioSearch extends Component {
           }
         }
       },
-      className: "btn"
-      // disabled={!this.state.finalText && !this.state.interimText}
-      ,
+      className: "btn",
       disabled: !this.state.finalText,
       "aria-label": "Search with transcribed text"
     }, "Search"), /*#__PURE__*/React.createElement("button", {
