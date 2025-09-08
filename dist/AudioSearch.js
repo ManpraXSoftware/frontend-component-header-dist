@@ -16,7 +16,26 @@ class AudioSearch extends Component {
       if (shouldTrap && modal) {
         const modalNodes = Array.from(modal.querySelectorAll('*'));
         // Comprehensive selector for all focusable elements
-        const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], area[href], details, summary, iframe, object, embed';
+        // const focusableSelector = 'a[href], [data-testid="breadcrumb-item"], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], area[href], details, summary, iframe, object, embed';
+        const focusableSelector = `
+      a[href], 
+      button:not([disabled]), 
+      input:not([disabled]), 
+      select:not([disabled]), 
+      textarea:not([disabled]), 
+      [tabindex]:not([tabindex="-1"]), 
+      [contenteditable="true"], 
+      area[href], 
+      details, 
+      summary, 
+      iframe, 
+      object, 
+      embed, 
+      li[data-testid="breadcrumb-item"], 
+      li[data-testid="breadcrumb-item"] a, 
+      li[data-testid="breadcrumb-item"] button, 
+      li[data-testid="breadcrumb-item"] [tabindex]
+    `;
         const nonModalNodes = Array.from(document.querySelectorAll(`body *:not(.voice-modal):not(.voice-modal *)`)).filter(node => node.matches(focusableSelector));
         _this.nonModalNodes = [];
         for (let i = 0; i < nonModalNodes.length; i++) {
@@ -29,9 +48,21 @@ class AudioSearch extends Component {
             _this.nonModalNodes.push(node);
           }
         }
-        const firstFocusable = modal.querySelector('button.btn-close');
+
+        // const firstFocusable = modal.querySelector('button.btn-close');
+        const firstFocusable = document.getElementById('voiceText');
         if (firstFocusable) {
+          firstFocusable.setAttribute('tabindex', '0'); // Make voiceText focusable
           firstFocusable.focus();
+        }
+        const micButton = document.querySelector('button.mic-btn');
+        if (micButton && !micButton.disabled) {
+          micButton.disabled = true;
+        }
+        const headerSearchWrap = document.getElementById('headerSearchWrap');
+        if (headerSearchWrap) {
+          // headerSearchWrap.style.outline = 'unset';
+          headerSearchWrap.classList.add('remove_focus');
         }
         console.log('Focus trap applied for Voice Search modal', {
           modalNodes: modalNodes.length,
@@ -72,7 +103,22 @@ class AudioSearch extends Component {
 
         // Focus the microphone button to ensure tab navigation resumes
         const micButton = document.querySelector('button.mic-btn');
-        if (micButton && !micButton.disabled) {
+        // if (micButton && !(micButton.disabled)) {
+        if (micButton) {
+          if (micButton.disabled) {
+            micButton.disabled = false; // Enable the button
+            console.log('Microphone button enabled', {
+              tag: micButton.tagName,
+              class: micButton.className,
+              timestamp: new Date().toISOString()
+            });
+          }
+          const headerSearchWrap = document.getElementById('headerSearchWrap');
+          if (headerSearchWrap) {
+            // headerSearchWrap.style.outline = '1px auto';
+            // headerSearchWrap.focus();
+            headerSearchWrap.classList.remove('remove_focus');
+          }
           micButton.focus();
           console.log('Focused microphone button after modal close', {
             tag: micButton.tagName,
@@ -82,7 +128,26 @@ class AudioSearch extends Component {
           });
         } else {
           // Fallback to first focusable element on the page
-          const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"], [contenteditable="true"], area[href], summary';
+          // const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"], [contenteditable="true"], area[href], summary';
+          const focusableSelector = `
+          a[href], 
+          button:not([disabled]), 
+          input:not([disabled]), 
+          select:not([disabled]), 
+          textarea:not([disabled]), 
+          [tabindex]:not([tabindex="-1"]), 
+          [contenteditable="true"], 
+          area[href], 
+          details, 
+          summary, 
+          iframe, 
+          object, 
+          embed, 
+          li[data-testid="breadcrumb-item"], 
+          li[data-testid="breadcrumb-item"] a, 
+          li[data-testid="breadcrumb-item"] button, 
+          li[data-testid="breadcrumb-item"] [tabindex]
+        `;
           const firstPageFocusable = document.querySelector(focusableSelector);
           if (firstPageFocusable) {
             firstPageFocusable.focus();
@@ -416,7 +481,7 @@ class AudioSearch extends Component {
             timestamp: new Date().toISOString()
           });
           const totalSize = _this.audioChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0) || 0;
-          if (_this.audioChunksRef.current.length === 0) {
+          if (_this.audioChunksRef.current.length === 0 || _this.state.finalText === 'No speech detected. Please speak clearly or click Respeak to try again.') {
             console.log('Skipping transcription: no audio chunks collected', {
               length: _this.audioChunksRef.current.length,
               totalSize,
@@ -427,7 +492,8 @@ class AudioSearch extends Component {
               // finalText: 'No speech detected. Please speak clearly and try again.',
               showModal: true,
               isListening: false,
-              canRespeak: true
+              canRespeak: true,
+              canSearch: false
             });
             _this.audioChunksRef.current = [];
             _this.stopAllTracks();
@@ -462,6 +528,7 @@ class AudioSearch extends Component {
             if (response.ok && data.text) {
               _this.setState({
                 finalText: data.text,
+                canSearch: true,
                 debugMessage: 'Transcription successful: ' + data.text,
                 isListening: false,
                 canRespeak: true
@@ -604,23 +671,93 @@ class AudioSearch extends Component {
             }
           }
         };
+
+        // this.recognitionRef.current.onerror = (event) => {
+        //   console.log('Speech recognition error details:', { error: event.error, timestamp: new Date().toISOString() });
+        //   this.setState({
+        //     debugMessage: `Speech recognition error: ${event.error}`,
+        //     // finalText: `Error: ${event.error}. Please check microphone permissions or try again.`,
+        //     showModal: true,
+        //     isListening: false,
+        //     canRespeak: true,
+        //   });
+        //   this.audioChunksRef.current = [];
+        //   this.isStartingRef.current = false;
+        //   this.isStoppingRef.current = false;
+        //   // alert(`Speech recognition error: ${event.error}. Please check microphone permissions or try again.`);
+        //   this.handleStopRecording();
+        // };
+
+        // In the handleAudioSearch method, replace the existing recognitionRef.current.onerror block with:
         _this.recognitionRef.current.onerror = event => {
           console.log('Speech recognition error details:', {
             error: event.error,
             timestamp: new Date().toISOString()
           });
-          _this.setState({
-            debugMessage: `Speech recognition error: ${event.error}`,
-            // finalText: `Error: ${event.error}. Please check microphone permissions or try again.`,
-            showModal: true,
-            isListening: false,
-            canRespeak: true
-          });
-          _this.audioChunksRef.current = [];
-          _this.isStartingRef.current = false;
-          _this.isStoppingRef.current = false;
-          // alert(`Speech recognition error: ${event.error}. Please check microphone permissions or try again.`);
-          _this.handleStopRecording();
+          if (event.error === 'no-speech') {
+            _this.setState({
+              debugMessage: 'No speech detected by recognition API',
+              finalText: 'No speech detected. Please speak clearly or click Respeak to try again.',
+              showModal: true,
+              // Keep modal open
+              isListening: false,
+              canRespeak: true,
+              // Enable Respeak button
+              canSearch: false // Disable Search button
+            });
+            _this.audioChunksRef.current = [];
+            _this.isStartingRef.current = false;
+            _this.isStoppingRef.current = false;
+            _this.clearAllTimeouts(); // Clear all timeouts to prevent recordingTimeout
+            _this.stopAllTracks(); // Stop media tracks
+
+            const micButton = document.querySelector('button.mic-btn');
+            // console.log("disable disable mice btn")
+
+            if (micButton && !micButton.disabled) {
+              micButton.disabled = true; // Enable the button
+              console.log("disable mice btn");
+            }
+            if (_this.mediaRecorder.current && _this.mediaRecorder.current.state !== 'inactive') {
+              _this.mediaRecorder.current.stop();
+              _this.setState({
+                debugMessage: 'MediaRecorder stopped due to no speech'
+              });
+            }
+            if (_this.recognitionRef.current) {
+              try {
+                _this.recognitionRef.current.stop();
+                _this.recognitionRef.current.onresult = null;
+                _this.recognitionRef.current.onerror = null;
+                _this.recognitionRef.current.onend = null;
+                _this.recognitionRef.current = null;
+                _this.setState({
+                  debugMessage: 'Speech recognition stopped due to no speech'
+                });
+              } catch (error) {
+                console.error('Error stopping speech recognition:', {
+                  error: error.message,
+                  timestamp: new Date().toISOString()
+                });
+                _this.setState({
+                  debugMessage: `Error stopping speech recognition: ${error.message}`
+                });
+              }
+            }
+          } else {
+            _this.setState({
+              debugMessage: `Speech recognition error: ${event.error}`,
+              finalText: `Error: ${event.error}. Please check microphone permissions or try again.`,
+              showModal: true,
+              isListening: false,
+              canRespeak: true,
+              canSearch: false // Disable Search button for other errors
+            });
+            _this.audioChunksRef.current = [];
+            _this.isStartingRef.current = false;
+            _this.isStoppingRef.current = false;
+            _this.handleStopRecording(); // Call handleStopRecording for other errors
+          }
         };
         _this.recognitionRef.current.onend = () => {
           // console.log('Speech recognition ended', { isListening: this.state.isListening, isStopping: this.isStoppingRef.current, timestamp: new Date().toISOString() });
@@ -707,22 +844,83 @@ class AudioSearch extends Component {
           _this.stopAllTracks();
           _this.isStartingRef.current = false;
         }
+
+        // this.speechDetectionTimeoutRef.current = setTimeout(() => {
+        //   if (this.state.isListening && !this.isStoppingRef.current && !this.state.interimText && !this.state.finalText && this.state.transcriptBuffer.length === 0) {
+        //     console.log('No speech detected within 10 seconds', { timestamp: new Date().toISOString() });
+        //     this.setState({ 
+        //       debugMessage: 'No speech detected within 10 seconds', 
+        //       // finalText: 'No speech detected. Please speak clearly and try again.', 
+        //       isListening: false, 
+        //       showModal: true,
+        //       canRespeak: true,
+        //     });
+        //     this.audioChunksRef.current = [];
+        //     this.isStartingRef.current = false;
+        //     this.isStoppingRef.current = false; 
+        //     this.handleStopRecording();
+        //   }
+        // }, 10000);
+
         _this.speechDetectionTimeoutRef.current = setTimeout(() => {
           if (_this.state.isListening && !_this.isStoppingRef.current && !_this.state.interimText && !_this.state.finalText && _this.state.transcriptBuffer.length === 0) {
             console.log('No speech detected within 10 seconds', {
+              isStarting: _this.isStartingRef.current,
+              isStopping: _this.isStoppingRef.current,
+              isListening: _this.state.isListening,
+              showModal: _this.state.showModal,
+              canRespeak: _this.state.canRespeak,
+              micButtonDisabled: _this.state.isListening || _this.isStartingRef.current || _this.isStoppingRef.current,
               timestamp: new Date().toISOString()
             });
             _this.setState({
               debugMessage: 'No speech detected within 10 seconds',
-              // finalText: 'No speech detected. Please speak clearly and try again.', 
+              finalText: 'No speech detected. Please speak clearly or click Respeak to try again.',
               isListening: false,
               showModal: true,
-              canRespeak: true
+              canRespeak: true,
+              canSearch: false
+            }, () => {
+              console.log('No speech detected state updated', {
+                isStarting: _this.isStartingRef.current,
+                isStopping: _this.isStoppingRef.current,
+                isListening: _this.state.isListening,
+                showModal: _this.state.showModal,
+                canRespeak: _this.state.canRespeak,
+                micButtonDisabled: _this.state.isListening || _this.isStartingRef.current || _this.isStoppingRef.current,
+                timestamp: new Date().toISOString()
+              });
             });
-            _this.audioChunksRef.current = [];
-            _this.isStartingRef.current = false;
-            _this.isStoppingRef.current = false;
-            _this.handleStopRecording();
+            _this.clearAllTimeouts();
+            _this.stopAllTracks();
+            if (_this.mediaRecorder.current && _this.mediaRecorder.current.state !== 'inactive') {
+              _this.mediaRecorder.current.stop();
+              _this.setState({
+                debugMessage: 'MediaRecorder stopped due to no speech'
+              });
+            }
+            if (_this.recognitionRef.current) {
+              try {
+                _this.recognitionRef.current.stop();
+                _this.recognitionRef.current.onresult = null;
+                _this.recognitionRef.current.onerror = null;
+                _this.recognitionRef.current.onend = null;
+                _this.recognitionRef.current = null;
+                _this.setState({
+                  debugMessage: 'Speech recognition stopped due to no speech'
+                });
+              } catch (error) {
+                console.error('Error stopping speech recognition:', {
+                  error: error.message,
+                  timestamp: new Date().toISOString()
+                });
+                _this.setState({
+                  debugMessage: `Error stopping speech recognition: ${error.message}`
+                });
+              }
+            }
+            // Explicitly ensure isStartingRef.current remains true
+            _this.isStartingRef.current = true; // Reinforce to prevent accidental reset
           }
         }, 10000);
         _this.recordingTimeoutRef.current = setTimeout(() => {
@@ -758,7 +956,8 @@ class AudioSearch extends Component {
         // alert('Unexpected error: ' + error.message);
         _this.stopAllTracks();
         _this.isStartingRef.current = false;
-        _this.isStoppingRef.current = false;
+        // this.isStoppingRef.current = false;
+        _this.isStoppingRef.current = true;
       }
     });
     _defineProperty(this, "handleStopRecording", () => {
@@ -854,7 +1053,7 @@ class AudioSearch extends Component {
       this.isStoppingRef.current = false;
 
       // Restore focusability for non-modal elements
-      this.trapFocusInModal(false);
+      // this.trapFocusInModal(false);
       console.log('Stop recording completed', {
         isStarting: this.isStartingRef.current,
         isStopping: this.isStoppingRef.current,
@@ -936,7 +1135,7 @@ class AudioSearch extends Component {
         canRespeak: true,
         transcriptBuffer: []
       });
-      this.isStartingRef.current = false;
+      // this.isStartingRef.current = false;
       this.isStoppingRef.current = false;
       console.log('Reset recording completed', {
         isStarting: this.isStartingRef.current,
@@ -958,6 +1157,7 @@ class AudioSearch extends Component {
         debugMessage: 'Respeak initiated',
         interimText: '',
         finalText: '',
+        canSearch: false,
         transcriptBuffer: [],
         isListening: false,
         canRespeak: false
@@ -993,6 +1193,7 @@ class AudioSearch extends Component {
       finalText: '',
       debugMessage: '',
       canRespeak: false,
+      canSearch: false,
       transcriptBuffer: []
     };
     this.mediaRecorder = /*#__PURE__*/React.createRef();
@@ -1012,6 +1213,8 @@ class AudioSearch extends Component {
   componentDidUpdate(prevProps, prevState) {
     if (this.state.showModal && !prevState.showModal) {
       this.trapFocusInModal(true);
+    } else if (!this.state.showModal && prevState.showModal) {
+      this.trapFocusInModal(false);
     }
   }
   componentDidMount() {
@@ -1037,7 +1240,11 @@ class AudioSearch extends Component {
       type: "button",
       onClick: () => this.handleAudioSearch(true),
       className: `mic-btn border ${this.props.searchLabel} ${this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current ? 'bg-gray-300' : 'bg-white'} hover:bg-gray-100`,
-      disabled: this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current,
+      disabled: this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current
+      // disabled={this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak}
+      // disabled={this.isStartingRef.current || this.isStoppingRef.current}
+      // !this.state.canRespeak
+      ,
       "aria-label": "Voice search"
     }, /*#__PURE__*/React.createElement(FontAwesomeIcon, {
       icon: faMicrophone
@@ -1048,7 +1255,8 @@ class AudioSearch extends Component {
       "aria-modal": "true",
       role: "dialog"
     }, /*#__PURE__*/React.createElement("div", {
-      className: "modal-dialog modal-dialog-centered modal-lg"
+      className: "modal-dialog modal-dialog-centered modal-lg",
+      role: "dialog"
     }, /*#__PURE__*/React.createElement("div", {
       className: "mx-modal-content"
     }, /*#__PURE__*/React.createElement("div", {
@@ -1059,14 +1267,17 @@ class AudioSearch extends Component {
     }, "Voice Search"), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "btn-close",
+      "data-dismiss": "modal",
       onClick: this.handleStopRecording,
       "aria-label": "Close",
       disabled: this.isStoppingRef.current
     })), /*#__PURE__*/React.createElement("div", {
       className: "modal-body"
     }, /*#__PURE__*/React.createElement("p", {
-      className: "text-gray-700 mb-4 text-base"
-    }, this.state.finalText || this.state.interimText || 'Listening...'), process.env.NODE_ENV === 'development' && this.state.debugMessage && /*#__PURE__*/React.createElement("p", {
+      className: "text-gray-700 mb-4 text-base",
+      id: "voiceText",
+      "aria-label": this.state.finalText || this.state.interimText || 'Listening'
+    }, this.state.finalText || this.state.interimText || 'Listening...'), process.env.NODE_ENV === 'developments' && this.state.debugMessage && /*#__PURE__*/React.createElement("p", {
       className: "text-xs text-gray-500 mt-2 break-words"
     }, "Output: ", this.state.debugMessage)), /*#__PURE__*/React.createElement("div", {
       className: "mx-modal-footer btn-modal-search"
@@ -1079,7 +1290,7 @@ class AudioSearch extends Component {
           transcriptBuffer: this.state.transcriptBuffer,
           timestamp: new Date().toISOString()
         });
-        if (this.state.finalText) {
+        if (this.state.finalText && this.state.canSearch) {
           const searchText = this.state.finalText;
           this.props.onTextUpdate(searchText);
           // let url = this.props.exploreCourseUrl + `/search?text=${encodeURIComponent(searchText)}`;
@@ -1099,8 +1310,10 @@ class AudioSearch extends Component {
           }
         }
       },
-      className: "btn",
-      disabled: !this.state.finalText,
+      className: "btn"
+      // disabled={!this.state.finalText}
+      ,
+      disabled: !this.state.canSearch,
       "aria-label": "Search with transcribed text"
     }, "Search"), /*#__PURE__*/React.createElement("button", {
       onClick: this.handleRespeak,

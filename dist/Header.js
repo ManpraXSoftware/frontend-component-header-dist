@@ -580,6 +580,7 @@ class Header extends Component {
       onSubmit: this.handleSearchClick
     }, /*#__PURE__*/React.createElement("div", {
       className: "form-group",
+      id: "headerSearchWrap",
       role: "search"
     }, /*#__PURE__*/React.createElement("input", {
       type: "text",
