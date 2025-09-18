@@ -47,13 +47,11 @@ class AudioSearch extends Component {
             _this.nonModalNodes.push(node);
           }
         }
-
-        // const firstFocusable = document.getElementById('voiceText');
-        // if (firstFocusable) {
-        //   firstFocusable.setAttribute('tabindex', '0');
-        //   firstFocusable.focus();
-        // }
-
+        const firstFocusable = document.getElementById('voiceText');
+        if (firstFocusable) {
+          // firstFocusable.setAttribute('tabindex', '0');
+          firstFocusable.focus();
+        }
         const micButton = document.querySelector('button.mic-btn');
         if (micButton && !micButton.disabled) {
           micButton.disabled = true;
@@ -252,7 +250,7 @@ class AudioSearch extends Component {
                 const voiceText = document.getElementById('voiceText');
                 if (voiceText) {
                   // voiceText.setAttribute('aria-live', 'polite');
-                  voiceText.setAttribute('tabindex', '0');
+                  // voiceText.setAttribute('tabindex', '0');
                   // role="status"
                   // voiceText.setAttribute('aria-live', 'assertive');
                   // voiceText.setAttribute('role', 'status');
@@ -1140,11 +1138,12 @@ class AudioSearch extends Component {
       className: "modal-body"
     }, /*#__PURE__*/React.createElement("p", {
       className: "text-gray-700 mb-4 text-base",
-      id: "voiceText"
-      // tabindex="0"
-      // role="status"
-      // aria-label={this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start voice search.'}
-    }, this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start voice search.'), process.env.NODE_ENV === 'dev' && this.state.debugMessage && /*#__PURE__*/React.createElement("p", {
+      id: "voiceText",
+      tabindex: "0",
+      "aria-label": this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start voice search.'
+    }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true"
+    }, this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start voice search.')), process.env.NODE_ENV === 'dev' && this.state.debugMessage && /*#__PURE__*/React.createElement("p", {
       className: "text-xs text-gray-500 mt-2 break-words"
     }, "Output: ", this.state.debugMessage)), /*#__PURE__*/React.createElement("div", {
       className: "mx-modal-footer btn-modal-search"
