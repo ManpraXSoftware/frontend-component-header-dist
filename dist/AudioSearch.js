@@ -1141,9 +1141,7 @@ class AudioSearch extends Component {
       id: "voiceText",
       tabindex: "0",
       "aria-label": this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start speaking, then click Stop after you finish.'
-    }, /*#__PURE__*/React.createElement("span", {
-      "aria-hidden": "true"
-    }, this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start speaking, then click Stop after you finish.')), process.env.NODE_ENV === 'dev' && this.state.debugMessage && /*#__PURE__*/React.createElement("p", {
+    }, /*#__PURE__*/React.createElement("span", null, this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start speaking, then click Stop after you finish.')), process.env.NODE_ENV === 'dev' && this.state.debugMessage && /*#__PURE__*/React.createElement("p", {
       className: "text-xs text-gray-500 mt-2 break-words"
     }, "Output: ", this.state.debugMessage)), /*#__PURE__*/React.createElement("div", {
       className: "mx-modal-footer btn-modal-search"
