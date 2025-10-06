@@ -86,7 +86,7 @@ class Header extends Component {
       let current_url = window.location.href;
       let base_url = window.location.origin;
       let text = "Do you want to change the language? You will be redirected to the 'explore courses' page";
-      if (current_url.includes('explore-courses/program-courses') || current_url.includes('explore-courses/#main') || current_url === `${base_url}/explore-courses/` || current_url === `${base_url}/explore-courses` || current_url.includes('explore-courses/search')) {
+      if (current_url.includes('explore-courses/program-courses') || current_url.includes('explore-courses/#main') || current_url === `${base_url}/explore-courses/` || current_url === `${base_url}/explore-courses` || current_url === `${base_url}/explore-courses/dashboard/programs/` || current_url === `${base_url}/explore-courses/dashboard/` || current_url.startsWith(`${base_url}/explore-courses/dashboard/`) || current_url.includes('explore-courses/search')) {
         this.chngLang(e);
       } else {
         // Use a custom confirmation dialog
