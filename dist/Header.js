@@ -562,14 +562,14 @@ class Header extends Component {
     }, /*#__PURE__*/React.createElement("li", {
       className: "nav-item"
     }, /*#__PURE__*/React.createElement("a", {
-      className: window.location.href.includes('/explore-courses/') ? 'active tab-nav-link' : 'tab-nav-link',
+      className: window.location.href.includes('/explore-courses/') && !window.location.href.includes('/explore-courses/dashboard/') ? 'active tab-nav-link' : 'tab-nav-link',
       href: "/explore-courses/",
       accessKey: "c",
       "aria-current": "page"
     }, "Explore Courses")), /*#__PURE__*/React.createElement("li", {
       className: "nav-item"
     }, /*#__PURE__*/React.createElement("a", {
-      className: window.location.href.includes('dashboard/programs/') ? 'active tab-nav-link' : 'tab-nav-link',
+      className: window.location.href.includes('/explore-courses/dashboard/') ? 'active tab-nav-link' : 'tab-nav-link',
       href: getConfig().LMS_BASE_URL + '/dashboard/programs/',
       accessKey: "s",
       "aria-current": "page"
