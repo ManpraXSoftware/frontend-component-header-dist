@@ -570,7 +570,7 @@ class Header extends Component {
       className: "nav-item"
     }, /*#__PURE__*/React.createElement("a", {
       className: window.location.href.includes('/explore-courses/dashboard/') ? 'active tab-nav-link' : 'tab-nav-link',
-      href: getConfig().LMS_BASE_URL + '/dashboard/programs/',
+      href: "/explore-courses/dashboard/programs",
       accessKey: "s",
       "aria-current": "page"
     }, "Dashboard"))), /*#__PURE__*/React.createElement("div", {
@@ -594,9 +594,7 @@ class Header extends Component {
       name: "Search for topic of interest",
       placeholder: "Search for topic of interest",
       className: "enter"
-    }), /*#__PURE__*/React.createElement(AudioSearch
-    // currentLang={this.current_lang}
-    , {
+    }), /*#__PURE__*/React.createElement(AudioSearch, {
       currentLang: Cookies.get('lang', {
         domain: getConfig().SITE_DOMAIN[0],
         path: '/',
@@ -662,7 +660,7 @@ class Header extends Component {
       className: "mobile-nav-item dropdown-item dropdown-nav-item",
       id: "dashboard-navbar"
     }, /*#__PURE__*/React.createElement("a", {
-      href: getConfig().LMS_BASE_URL + '/dashboard/programs/',
+      href: "/explore-courses/dashboard/programs",
       role: "menuitem"
     }, "Dashboard")), /*#__PURE__*/React.createElement("div", {
       className: "mobile-nav-item dropdown-item dropdown-nav-item"
