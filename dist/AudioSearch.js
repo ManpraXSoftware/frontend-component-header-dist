@@ -47,6 +47,8 @@ class AudioSearch extends Component {
             _this.nonModalNodes.push(node);
           }
         }
+        // this.setState({ announcement: 'MX Voice search dialog open' });
+
         const firstFocusable = document.getElementById('voiceText');
         if (firstFocusable) {
           // firstFocusable.setAttribute('tabindex', '0');
@@ -431,6 +433,8 @@ class AudioSearch extends Component {
         });
         return;
       }
+      // this.setState({ announcement: 'MX Voice search dialog open' });
+
       console.log('handleAudioSearch started', {
         currentLang: this.props.currentLang,
         browser: navigator.userAgent,
@@ -1047,7 +1051,8 @@ class AudioSearch extends Component {
       canSearch: false,
       transcriptBuffer: [],
       modalMessage: '',
-      recordingStartTime: null
+      recordingStartTime: null,
+      announcement: ''
     };
     this.mediaRecorder = /*#__PURE__*/React.createRef();
     this.streamRef = /*#__PURE__*/React.createRef();
@@ -1063,9 +1068,14 @@ class AudioSearch extends Component {
   }
   componentDidUpdate(prevProps, prevState) {
     if (this.state.showModal && !prevState.showModal) {
+      // this.setState({ announcement: 'MX Voice search dialog open' });
+
       this.trapFocusInModal(true);
     } else if (!this.state.showModal && prevState.showModal) {
       this.trapFocusInModal(false);
+      this.setState({
+        announcement: 'Voice search dialog closed'
+      });
     }
     if (this.state.finalText !== prevState.finalText || this.state.interimText !== prevState.interimText) {
       this.forceUpdate();
@@ -1104,7 +1114,11 @@ class AudioSearch extends Component {
     }
   }
   render() {
-    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      "aria-live": "polite",
+      role: "status",
+      className: "sr-only"
+    }, this.state.announcement), /*#__PURE__*/React.createElement("button", {
       type: "button",
       onClick: () => this.handleAudioSearch(),
       className: `mic-btn border ${this.props.searchLabel} ${this.state.isListening ? 'bg-gray-300' : 'bg-white'} hover:bg-gray-100`,
@@ -1119,15 +1133,19 @@ class AudioSearch extends Component {
       "aria-modal": "true",
       role: "dialog"
     }, /*#__PURE__*/React.createElement("div", {
-      className: "modal-dialog modal-dialog-centered modal-lg",
-      role: "dialog"
+      className: "modal-dialog modal-dialog-centered modal-lg"
     }, /*#__PURE__*/React.createElement("div", {
+      "aria-live": "polite",
+      role: "status",
+      className: "sr-only"
+    }, "Voice search dialog Open"), /*#__PURE__*/React.createElement("div", {
       className: "mx-modal-content"
     }, /*#__PURE__*/React.createElement("div", {
       className: "mx-modal-header"
     }, /*#__PURE__*/React.createElement("h5", {
       className: "mx-modal-title",
       id: "voiceSearchModalLabel"
+      // aria-label="MX Voice search dialog open"
     }, "Voice Search"), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "btn-close",
