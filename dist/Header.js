@@ -13,7 +13,91 @@ import $ from 'jquery';
 import AudioSearch from './AudioSearch';
 class Header extends Component {
   constructor(props) {
+    var _this;
     super(props);
+    _this = this;
+    // Focus trap for user dropdown (adapted from AudioSearch logic: disable/restore, no wrapping)
+    _defineProperty(this, "trapFocusInDropdown", function () {
+      let shouldTrap = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+      const dropdown = document.getElementById('user-menu');
+      if (!dropdown) return;
+      if (shouldTrap) {
+        // Collect and disable non-dropdown focusables (matching your original logic)
+        const dropdownNodes = Array.from(dropdown.querySelectorAll('*'));
+        const nonDropdownNodes = Array.from(document.querySelectorAll(`body *:not(#user-menu):not(#user-menu *)`)).filter(node => node.matches(_this.focusableSelector));
+        _this.nonDropdownNodes = [];
+        for (let i = 0; i < nonDropdownNodes.length; i++) {
+          const node = nonDropdownNodes[i];
+          if (!dropdownNodes.includes(node)) {
+            node._prevTabindex = node.hasAttribute('tabindex') ? node.getAttribute('tabindex') : 'none';
+            node.setAttribute('tabindex', '-1');
+            node.style.outline = 'none';
+            _this.nonDropdownNodes.push(node);
+          }
+        }
+
+        // Focus first focusable in dropdown
+        const firstFocusable = document.querySelector('#user-menu a[role="menuitem"]'); // First menu item
+        if (firstFocusable) {
+          firstFocusable.focus();
+        }
+        console.log('Dropdown focus trap applied', {
+          dropdownNodes: dropdownNodes.length,
+          nonDropdownNodes: nonDropdownNodes.length,
+          timestamp: new Date().toISOString()
+        });
+      } else if (_this.nonDropdownNodes.length > 0) {
+        // Restore non-dropdown focusables (matching your original logic)
+        const failedRestorations = [];
+        for (let i = 0; i < _this.nonDropdownNodes.length; i++) {
+          const node = _this.nonDropdownNodes[i];
+          if (node._prevTabindex !== 'none') {
+            node.setAttribute('tabindex', node._prevTabindex);
+          } else {
+            node.removeAttribute('tabindex');
+          }
+          node.style.outline = '';
+          if (node.hasAttribute('tabindex') && node.getAttribute('tabindex') === '-1') {
+            failedRestorations.push({
+              tag: node.tagName,
+              id: node.id,
+              class: node.className
+            });
+          }
+          node._prevTabindex = null;
+        }
+        console.log('Dropdown tabindex restored', {
+          restoredNodes: _this.nonDropdownNodes.length,
+          failedRestorations,
+          timestamp: new Date().toISOString()
+        });
+
+        // Return focus to trigger (user image div)
+        const toggleButton = document.querySelector('.user_custom_login');
+        if (toggleButton) {
+          toggleButton.focus();
+          console.log('Focused user image after dropdown close', {
+            tag: toggleButton.tagName,
+            id: toggleButton.id,
+            class: toggleButton.className,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          // Fallback to first page focusable
+          const firstPageFocusable = document.querySelector(_this.focusableSelector);
+          if (firstPageFocusable) {
+            firstPageFocusable.focus();
+            console.log('Focused first page element after dropdown close', {
+              tag: firstPageFocusable.tagName,
+              id: firstPageFocusable.id,
+              class: firstPageFocusable.className,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
+        _this.nonDropdownNodes = [];
+      }
+    });
     _defineProperty(this, "handleSearchClick", e => {
       e.preventDefault();
       let searchData = this.state.setText;
@@ -37,8 +121,12 @@ class Header extends Component {
       const mobileMenu = document.getElementById("mobile-menu");
       const hamburgerButton = document.querySelector(".hamburger-menu");
       if (userMenu && !userMenu.classList.contains("hidden") && !event.target.closest('.secondary') && !event.target.closest('#user-menu')) {
+        const isOpen = !userMenu.classList.contains("hidden"); // Before close
         userMenu.classList.add("hidden");
         toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+        if (isOpen) {
+          this.trapFocusInDropdown(false); // Release trap on close
+        }
       }
       if (this.state.isMobileMenuOpen && mobileMenu && !event.target.closest('#mobile-menu') && !event.target.closest('.hamburger-menu')) {
         this.setState({
@@ -54,10 +142,14 @@ class Header extends Component {
       const hamburgerButton = document.querySelector(".hamburger-menu");
       if (event.key === 'Escape') {
         if (userMenu && !userMenu.classList.contains("hidden")) {
+          const isOpen = !userMenu.classList.contains("hidden"); // Before close
           userMenu.classList.add("hidden");
           toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
-          const toggleButton = document.querySelector(".toggle-user-dropdown");
+          const toggleButton = document.querySelector(".user_custom_login");
           if (toggleButton) toggleButton.focus();
+          if (isOpen) {
+            this.trapFocusInDropdown(false); // Release trap on close
+          }
         }
         if (this.state.isMobileMenuOpen && mobileMenu) {
           this.setState({
@@ -237,14 +329,22 @@ class Header extends Component {
         Localize.untranslate($(".myLang").get(0));
       }, 100);
     });
-    //Search
-    _defineProperty(this, "handleSearchClick", e => {
-      e.preventDefault();
-      let searchData = $('.enter').val();
-      if (searchData != "") {
-        let url = getConfig().EXPLORE_COURSE_URL[0] + `/search?text=${searchData}`;
-        window.location = url;
-        $('.enter').val('');
+    // Updated toggle handler for dropdown open/close with focus trap
+    _defineProperty(this, "handleDropdownToggle", e => {
+      e.stopPropagation(); // Prevent bubbling
+      const userMenu = document.getElementById("user-menu");
+      const isHidden = userMenu.classList.contains("hidden");
+      const willOpen = isHidden;
+      userMenu.classList.toggle("hidden");
+      const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
+      toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", willOpen ? "true" : "false"));
+      // alert(willOpen)
+      if (willOpen) {
+        // Defer trap to after class toggle settles
+        // alert("h")
+        setTimeout(() => this.trapFocusInDropdown(true), 0);
+      } else {
+        this.trapFocusInDropdown(false);
       }
     });
     this.state = {
@@ -257,6 +357,15 @@ class Header extends Component {
       profileUrl: ''
     };
     this.dropdownRef = /*#__PURE__*/React.createRef();
+    this.nonDropdownNodes = []; // Track disabled non-dropdown nodes
+    this.focusableSelector = `
+      a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), 
+      textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], 
+      [tabindex="0"], area[href], details, summary, iframe, object, embed,
+      li[data-testid="breadcrumb-item"], li[data-testid="breadcrumb-item"] a, 
+      li[data-testid="breadcrumb-item"] button, li[data-testid="breadcrumb-item"] [tabindex],
+      div[class*="sequence-navigation-tabs-container"], div[class*="sequence-navigation-tabs d-flex flex-grow-1"]
+    `.trim(); // Focusable selector for trap
   }
   componentDidMount() {
     var darkLang = [];
@@ -268,12 +377,6 @@ class Header extends Component {
       window.location.href = loginUrl;
       return; // Stop further execution
     }
-
-    // console.log("site domain", getConfig().SITE_DOMAIN,getConfig().EXPLORE_COURSE_URL )
-
-    // const search_query = new URLSearchParams(location.search).get("text");
-    // this.setState({ setText: search_query || '' }); // Fallback to an empty string
-
     if (!this.state.setText) {
       const search_query = new URLSearchParams(location.search).get("text");
       this.setState({
@@ -358,10 +461,7 @@ class Header extends Component {
             } else if (e.code == "en") {
               lang_name = e.name + "(English)";
             } else if (e.code == "ta-IN") {
-              // lang_name = e.name + "(Tamil (India))"
               lang_name = "தமிழ்(Tamil)";
-              // const cleanedName = e.name.replace(/\s*\(India\)/, "");
-              // lang_name = cleanedName + "(Tamil)"
             } else if (e.code == "or") {
               lang_name = e.name + "(Odia)";
             } else if (e.code == "ml-IN" || e.code == "ml") {
@@ -404,9 +504,6 @@ class Header extends Component {
             } else if (code == "en") {
               name = name + "(English)";
             } else if (code == "ta-IN") {
-              // name = name + "(Tamil (India))"
-              // const cleanedName = name.replace(/\s*\(India\)/, "");
-              // name = cleanedName + "(Tamil)"
               name = "தமிழ்(Tamil)";
             } else if (code == "or") {
               name = name + "(Odia)";
@@ -445,20 +542,6 @@ class Header extends Component {
           }
         }
       });
-
-      // Add #main in iframe URL 
-
-      // const iframe = document.getElementById('unit-iframe');
-      // const iframeSrc = iframe?.getAttribute('src');
-
-      // if (iframe && iframeSrc) {
-      //   const parentUrlHash = window.location.hash;
-
-      //   if (parentUrlHash === '#main' && !iframeSrc.includes('#main')) {
-      //     const updatedSrc = `${iframeSrc}#main`;
-      //     iframe.setAttribute('src', updatedSrc);
-      //   }
-      // }
     };
     this.setState({
       darkLanguages: darkLang
@@ -475,42 +558,11 @@ class Header extends Component {
     let current_url = window.location.href;
     if (current_url.includes('learning/course/')) {
       $(".myLang").hide();
-      //  LTS WAT Code START : DO NOT REMOVE or MODIFY 
-      //  Create and append the LTS script
-      // const ltsScript = document.createElement('script');
-      // ltsScript.src = `https://lts.lb.gcloud.letstalksign.org/script/lts-load-lms-V1-OB.js?auth_api=${getConfig().LMS_BASE_URL}/letstalksign/authenticate`;
-      // ltsScript.async = true;
-      // document.body.appendChild(ltsScript);
-      //  LTS WAT Code END : DO NOT REMOVE or MODIFY 
     }
-
-    // if (document.readyState === 'complete') {
-    //   console.log('DOM and all resources have fully loaded');
-    // } else if (document.readyState === 'interactive') {
-    //     console.log('DOM fully loaded and parsed, but resources may still be loading');
-
-    // } else {
-    //     console.log('DOM is still loading');
-
-    // }
 
     // Add document click listener
     document.addEventListener('click', this.handleClickOutside);
     document.addEventListener('keydown', this.handleKeyDown);
-
-    // Cleanup for modal
-    // Add ESC key listener
-    // this.handleEscKey = (event) => {
-    //   if (event.key === 'Escape' && this.state.showModal && !this.isStoppingRef.current) {
-    //     event.stopPropagation();
-    //     event.preventDefault();
-    //     console.log('ESC key event triggered, showModal:', this.state.showModal);
-    //     this.handleStopRecording();
-    //   }
-    // };
-    // document.addEventListener('keydown', this.handleEscKey);
-
-    // document.addEventListener('keydown', this.handleEscKey, { capture: true });
   }
   componentWillUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
@@ -589,7 +641,7 @@ class Header extends Component {
       onChange: e => {
         this.setState({
           setText: e.target.value
-        }); // Update state correctly
+        });
       },
       name: "Search for topic of interest",
       placeholder: "Search for topic of interest",
@@ -613,19 +665,20 @@ class Header extends Component {
       "aria-label": "Search"
     }))))))), /*#__PURE__*/React.createElement("div", {
       className: "secondary",
-      onClick: e => {
-        const userMenu = document.getElementById("user-menu");
-        const isHidden = userMenu.classList.contains("hidden");
-        userMenu.classList.toggle("hidden");
-        const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
-        toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", !isHidden));
-      }
+      onClick: this.handleDropdownToggle
     }, /*#__PURE__*/React.createElement("div", {
       className: "nav-item hidden-mobile user_custom_login toggle-user-dropdown",
       "aria-label": "User Account Options",
       "aria-expanded": "false",
       tabIndex: 0,
-      "aria-controls": "user-menu"
+      "aria-controls": "user-menu",
+      onClick: this.handleDropdownToggle,
+      onKeyDown: e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.handleDropdownToggle(e);
+        }
+      }
     }, /*#__PURE__*/React.createElement("span", {
       className: "menu-title",
       "aria-hidden": "true"
@@ -649,13 +702,20 @@ class Header extends Component {
       "aria-label": "Options Menu",
       "aria-expanded": "false",
       tabIndex: -1,
-      "aria-controls": "user-menu"
+      "aria-controls": "user-menu",
+      onClick: this.handleDropdownToggle,
+      onKeyDown: e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.handleDropdownToggle(e);
+        }
+      }
     }, /*#__PURE__*/React.createElement(CaretDropDownIcon, null)), /*#__PURE__*/React.createElement("div", {
       className: "dropdown-user-menu hidden",
       "aria-label": "More Options",
       role: "menu",
       id: "user-menu",
-      tabIndex: -1
+      tabIndex: "-1"
     }, /*#__PURE__*/React.createElement("div", {
       className: "mobile-nav-item dropdown-item dropdown-nav-item",
       id: "dashboard-navbar"
