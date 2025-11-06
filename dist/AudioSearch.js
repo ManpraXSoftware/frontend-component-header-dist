@@ -33,8 +33,8 @@ class AudioSearch extends Component {
         li[data-testid="breadcrumb-item"] a, 
         li[data-testid="breadcrumb-item"] button, 
         li[data-testid="breadcrumb-item"] [tabindex],
-        div[className="sequence-navigation-tabs-container"],
-        div[className="sequence-navigation-tabs d-flex flex-grow-1"]
+       div.sequence-navigation-tabs-container,
+       div.sequence-navigation-tabs.d-flex.flex-grow-1
       `;
         const nonModalNodes = Array.from(document.querySelectorAll(`body *:not(.voice-modal):not(.voice-modal *)`)).filter(node => node.matches(focusableSelector));
         _this.nonModalNodes = [];
@@ -450,7 +450,8 @@ class AudioSearch extends Component {
         canSearch: false,
         transcriptBuffer: [],
         modalMessage: 'Click Speak to start speaking, then click Stop after you finish.',
-        recordingStartTime: null
+        recordingStartTime: null,
+        announcement: ''
       });
     });
     _defineProperty(this, "handleSpeak", async () => {
@@ -1009,6 +1010,23 @@ class AudioSearch extends Component {
         _this.cleanupAfterStop();
         return;
       }
+      if (closeModal) {
+        _this.setState({
+          showModal: false,
+          announcement: 'Voice search dialog closed'
+        }, () => {
+          console.log('Modal closed on cancel', {
+            timestamp: new Date().toISOString()
+          });
+          // const voiceText = document.getElementById('voiceText');
+          // if (voiceText) {
+          //   voiceText.setAttribute('aria-live', 'off');
+          // }
+        });
+        _this.cleanupAfterStop();
+        // this.isStoppingRef.current = false;
+        return; // Exit early, skip API processing
+      }
       console.log('Stop recording completed', {
         isStarting: _this.isStartingRef.current,
         isStopping: _this.isStoppingRef.current,
@@ -1068,8 +1086,6 @@ class AudioSearch extends Component {
   }
   componentDidUpdate(prevProps, prevState) {
     if (this.state.showModal && !prevState.showModal) {
-      // this.setState({ announcement: 'MX Voice search dialog open' });
-
       this.trapFocusInModal(true);
     } else if (!this.state.showModal && prevState.showModal) {
       this.trapFocusInModal(false);
@@ -1159,11 +1175,14 @@ class AudioSearch extends Component {
       id: "voiceText",
       tabindex: "0",
       "aria-label": this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start speaking, then click Stop after you finish.'
-    }, /*#__PURE__*/React.createElement("span", null, this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start speaking, then click Stop after you finish.')), process.env.NODE_ENV === 'dev' && this.state.debugMessage && /*#__PURE__*/React.createElement("p", {
+    }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true"
+    }, this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start speaking, then click Stop after you finish.')), process.env.NODE_ENV === 'dev' && this.state.debugMessage && /*#__PURE__*/React.createElement("p", {
       className: "text-xs text-gray-500 mt-2 break-words"
     }, "Output: ", this.state.debugMessage)), /*#__PURE__*/React.createElement("div", {
       className: "mx-modal-footer btn-modal-search"
     }, /*#__PURE__*/React.createElement("button", {
+      id: "speakButton",
       onClick: this.handleSpeak,
       className: "btn",
       disabled: this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak,
