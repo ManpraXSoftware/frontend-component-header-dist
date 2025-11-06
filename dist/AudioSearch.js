@@ -1086,7 +1086,12 @@ class AudioSearch extends Component {
   }
   componentDidUpdate(prevProps, prevState) {
     if (this.state.showModal && !prevState.showModal) {
-      this.trapFocusInModal(true);
+      // this.trapFocusInModal(true);
+      this.setState({
+        announcement: 'Voice search dialog open'
+      }, () => {
+        this.trapFocusInModal(true);
+      });
     } else if (!this.state.showModal && prevState.showModal) {
       this.trapFocusInModal(false);
       this.setState({
@@ -1151,10 +1156,6 @@ class AudioSearch extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       className: "modal-dialog modal-dialog-centered modal-lg"
     }, /*#__PURE__*/React.createElement("div", {
-      "aria-live": "polite",
-      role: "status",
-      className: "sr-only"
-    }, "Voice search dialog Open"), /*#__PURE__*/React.createElement("div", {
       className: "mx-modal-content"
     }, /*#__PURE__*/React.createElement("div", {
       className: "mx-modal-header"
