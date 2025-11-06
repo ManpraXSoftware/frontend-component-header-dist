@@ -1173,10 +1173,12 @@ class AudioSearch extends Component {
     }, /*#__PURE__*/React.createElement("p", {
       className: "text-gray-700 mb-4 text-base",
       id: "voiceText",
-      tabindex: "0",
-      "aria-label": this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start speaking, then click Stop after you finish.'
+      tabindex: "0"
+      // aria-label={this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start speaking, then click Stop after you finish.'}
+      ,
+      "aria-labelledby": "voiceLable"
     }, /*#__PURE__*/React.createElement("span", {
-      "aria-hidden": "true"
+      id: "voiceLable"
     }, this.state.finalText || this.state.interimText || this.state.modalMessage || 'Click Speak to start speaking, then click Stop after you finish.')), process.env.NODE_ENV === 'dev' && this.state.debugMessage && /*#__PURE__*/React.createElement("p", {
       className: "text-xs text-gray-500 mt-2 break-words"
     }, "Output: ", this.state.debugMessage)), /*#__PURE__*/React.createElement("div", {
