@@ -47,6 +47,10 @@ class AudioSearch extends Component {
             _this.nonModalNodes.push(node);
           }
         }
+        //   if (document.activeElement) document.activeElement.blur();
+        //   window.focus();  // Ensures document is active before modal trap
+        //   document.body.style.overflow = 'hidden';
+        // window.scrollTo(0, 0);
         // this.setState({ announcement: 'MX Voice search dialog open' });
 
         const firstFocusable = document.getElementById('voiceText');
@@ -169,6 +173,7 @@ class AudioSearch extends Component {
         transcriptBuffer: this.state.transcriptBuffer,
         timestamp: new Date().toISOString()
       });
+      const currentSessionId = this.sessionIdRef.current;
       if (!this.isStoppingRef.current) {
         console.warn('MediaRecorder stopped unexpectedly', {
           chunks: this.audioChunksRef.current.length,
@@ -217,19 +222,31 @@ class AudioSearch extends Component {
         });
         try {
           const response = await fetch(`${getConfig().LMS_BASE_URL}/explore-courses/api/transcribe-audio/`, {
+            // const response = await fetch(`${getConfig().LMS_BASE_URL}/explore-courses/api/mx-transcribe-audio/`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            signal: this.abortControllerRef.current.signal
           });
           console.log('Transcription API response received', {
             status: response.status,
             headers: Object.fromEntries(response.headers.entries()),
+            sessionId: currentSessionId,
             timestamp: new Date().toISOString()
           });
           const data = await response.json();
           console.log('Transcription API data parsed', {
             data,
+            sessionId: currentSessionId,
             timestamp: new Date().toISOString()
           });
+          // NEW: Guard against late responses
+          if (this.sessionIdRef.current !== currentSessionId) {
+            console.log('Ignoring late API response for old session', {
+              currentSessionId,
+              newSessionId: this.sessionIdRef.current
+            });
+            return;
+          }
           if (response.ok) {
             if (data.text) {
               console.log('Transcription successful', {
@@ -273,6 +290,7 @@ class AudioSearch extends Component {
                 timestamp: new Date().toISOString()
               });
               const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'No speech detected. Please speak clearly and try again.';
+              if (this.sessionIdRef.current !== currentSessionId) return;
               this.setState({
                 debugMessage: 'No speech detected in audio, falling back to interimText.',
                 showModal: true,
@@ -307,6 +325,7 @@ class AudioSearch extends Component {
               timestamp: new Date().toISOString()
             });
             const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'Transcription error. Please try again.';
+            if (this.sessionIdRef.current !== currentSessionId) return;
             this.setState({
               debugMessage: 'Transcription error: ' + (data.error || 'Unknown error'),
               showModal: true,
@@ -334,12 +353,23 @@ class AudioSearch extends Component {
             });
           }
         } catch (error) {
+          if (error.name === 'AbortError') {
+            console.log('Transcription API aborted due to modal close', {
+              sessionId: currentSessionId,
+              timestamp: new Date().toISOString()
+            });
+            this.setState({
+              debugMessage: 'Session canceled'
+            });
+            return; // Don't process further
+          }
           console.error('Transcription API fetch error:', {
             error: error.message,
             stack: error.stack,
             timestamp: new Date().toISOString()
           });
           const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'Error connecting to transcription service. Please try again.';
+          if (this.sessionIdRef.current !== currentSessionId) return;
           this.setState({
             debugMessage: 'Transcription fetch error: ' + error.message,
             showModal: true,
@@ -372,6 +402,13 @@ class AudioSearch extends Component {
           stack: error.stack,
           timestamp: new Date().toISOString()
         });
+        if (this.sessionIdRef.current !== currentSessionId) {
+          console.log('Ignoring late processing error for old session', {
+            currentSessionId,
+            newSessionId: this.sessionIdRef.current
+          });
+          return;
+        }
         const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'Error processing audio. Please try again.';
         this.setState({
           debugMessage: 'Processing error: ' + error.message,
@@ -421,6 +458,11 @@ class AudioSearch extends Component {
       this.setState({
         recordingStartTime: null
       });
+      this.sessionIdRef.current = null;
+      if (this.abortControllerRef.current) {
+        this.abortControllerRef.current.abort();
+        this.abortControllerRef.current = null;
+      }
     });
     _defineProperty(this, "handleAudioSearch", async () => {
       if (this.isStartingRef.current || this.isStoppingRef.current) {
@@ -440,6 +482,21 @@ class AudioSearch extends Component {
         browser: navigator.userAgent,
         timestamp: new Date().toISOString()
       });
+
+      // this.setState({
+      //   showModal: true,
+      //   isListening: false,
+      //   interimText: '',
+      //   finalText: '',
+      //   debugMessage: 'Opening voice search modal',
+      //   canRespeak: true,
+      //   canSearch: false,
+      //   transcriptBuffer: [],
+      //   modalMessage: 'Click Speak to start speaking, then click Stop after you finish.',
+      //   recordingStartTime: null,
+      //   announcement: '',
+      // });
+
       this.setState({
         showModal: true,
         isListening: false,
@@ -452,6 +509,13 @@ class AudioSearch extends Component {
         modalMessage: 'Click Speak to start speaking, then click Stop after you finish.',
         recordingStartTime: null,
         announcement: ''
+      }, () => {
+        // NEW: Reset session and abort on modal open
+        this.sessionIdRef.current = null;
+        if (this.abortControllerRef.current) {
+          this.abortControllerRef.current.abort();
+          this.abortControllerRef.current = null;
+        }
       });
     });
     _defineProperty(this, "handleSpeak", async () => {
@@ -819,6 +883,11 @@ class AudioSearch extends Component {
               modalMessage: this.state.modalMessage,
               timestamp: new Date().toISOString()
             });
+            this.sessionIdRef.current = Date.now().toString();
+            this.abortControllerRef.current = new AbortController();
+            console.log('New session started', {
+              sessionId: this.sessionIdRef.current
+            });
           });
         } catch (error) {
           console.error('Error starting MediaRecorder or SpeechRecognition:', {
@@ -890,15 +959,12 @@ class AudioSearch extends Component {
     });
     _defineProperty(this, "handleStopRecording", function () {
       let closeModal = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-      if (_this.isStoppingRef.current) {
-        console.log('Stop recording ignored: already stopping', {
-          timestamp: new Date().toISOString()
-        });
-        _this.setState({
-          debugMessage: 'Stop recording ignored: already stopping'
-        });
-        return;
-      }
+      // if (this.isStoppingRef.current) {
+      //   console.log('Stop recording ignored: already stopping', { timestamp: new Date().toISOString() });
+      //   this.setState({ debugMessage: 'Stop recording ignored: already stopping' });
+      //   return;
+      // }
+
       _this.isStoppingRef.current = true;
       console.log('Stop recording initiated', {
         showModal: _this.state.showModal,
@@ -1010,7 +1076,34 @@ class AudioSearch extends Component {
         _this.cleanupAfterStop();
         return;
       }
+
+      // if (closeModal) {
+      //   this.setState({
+      //     showModal: false,
+      //     announcement: 'Voice search dialog closed',
+      //   }, () => {
+      //     console.log('Modal closed on cancel', { timestamp: new Date().toISOString() });
+
+      //   });
+      //   this.cleanupAfterStop();
+      //   return;  // Exit early, skip API processing
+      // }
+
       if (closeModal) {
+        // NEW: Abort pending API and clear state
+        if (_this.abortControllerRef.current) {
+          _this.abortControllerRef.current.abort();
+          console.log('API aborted on modal close', {
+            sessionId: _this.sessionIdRef.current
+          });
+        }
+        _this.setState({
+          finalText: '',
+          interimText: '',
+          transcriptBuffer: []
+        });
+        _this.sessionIdRef.current = null;
+        _this.abortControllerRef.current = null;
         _this.setState({
           showModal: false,
           announcement: 'Voice search dialog closed'
@@ -1018,14 +1111,9 @@ class AudioSearch extends Component {
           console.log('Modal closed on cancel', {
             timestamp: new Date().toISOString()
           });
-          // const voiceText = document.getElementById('voiceText');
-          // if (voiceText) {
-          //   voiceText.setAttribute('aria-live', 'off');
-          // }
         });
         _this.cleanupAfterStop();
-        // this.isStoppingRef.current = false;
-        return; // Exit early, skip API processing
+        return;
       }
       console.log('Stop recording completed', {
         isStarting: _this.isStartingRef.current,
@@ -1037,7 +1125,8 @@ class AudioSearch extends Component {
       });
     });
     _defineProperty(this, "handleEscKey", event => {
-      if (event.key === 'Escape' && this.state.showModal && !this.isStoppingRef.current) {
+      // if (event.key === 'Escape' && this.state.showModal && !this.isStoppingRef.current) {
+      if (event.key === 'Escape' && this.state.showModal) {
         event.stopPropagation();
         event.preventDefault();
         console.log('ESC key detected', {
@@ -1083,6 +1172,10 @@ class AudioSearch extends Component {
     this.isStartingRef.current = false;
     this.recordingTimeout = null;
     this.nonModalNodes = [];
+    this.abortControllerRef = /*#__PURE__*/React.createRef();
+    this.sessionIdRef = /*#__PURE__*/React.createRef();
+    this.sessionIdRef.current = null;
+    this.abortControllerRef.current = null;
   }
   componentDidUpdate(prevProps, prevState) {
     if (this.state.showModal && !prevState.showModal) {
@@ -1133,6 +1226,11 @@ class AudioSearch extends Component {
       clearTimeout(this.recordingTimeout);
       this.recordingTimeout = null;
     }
+    this.sessionIdRef.current = null;
+    if (this.abortControllerRef.current) {
+      this.abortControllerRef.current.abort();
+      this.abortControllerRef.current = null;
+    }
   }
   render() {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -1167,8 +1265,8 @@ class AudioSearch extends Component {
       type: "button",
       className: "btn-close",
       onClick: () => this.handleStopRecording(true),
-      "aria-label": "Close",
-      disabled: this.isStoppingRef.current
+      "aria-label": "Close"
+      // disabled={this.isStoppingRef.current}
     })), /*#__PURE__*/React.createElement("div", {
       className: "modal-body"
     }, /*#__PURE__*/React.createElement("p", {
