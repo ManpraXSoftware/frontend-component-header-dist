@@ -225,7 +225,8 @@ class AudioSearch extends Component {
             // const response = await fetch(`${getConfig().LMS_BASE_URL}/explore-courses/api/mx-transcribe-audio/`, {
             method: 'POST',
             body: formData,
-            signal: this.abortControllerRef.current.signal
+            signal: this.abortControllerRef.current.signal,
+            credentials: 'include'
           });
           console.log('Transcription API response received', {
             status: response.status,
