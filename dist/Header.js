@@ -1,3 +1,4 @@
+function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
@@ -120,13 +121,24 @@ class Header extends Component {
       const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
       const mobileMenu = document.getElementById("mobile-menu");
       const hamburgerButton = document.querySelector(".hamburger-menu");
-      if (userMenu && !userMenu.classList.contains("hidden") && !event.target.closest('.secondary') && !event.target.closest('#user-menu')) {
-        const isOpen = !userMenu.classList.contains("hidden"); // Before close
+
+      // if (userMenu && !userMenu.classList.contains("hidden") && 
+      //     !event.target.closest('.secondary') &&
+      //     !event.target.closest('#user-menu')) {
+      //   const isOpen = !userMenu.classList.contains("hidden"); // Before close
+      //   userMenu.classList.add("hidden");
+      //   toggleButtons.forEach((btn) => btn.setAttribute("aria-expanded", "false"));
+      //   if (isOpen) {
+      //     this.trapFocusInDropdown(false); // Release trap on close
+      //   }
+      // }
+
+      if (this.state.isDropdownOpen && userMenu && !event.target.closest('.secondary') && !event.target.closest('#user-menu')) {
+        this.setState({
+          isDropdownOpen: false
+        });
         userMenu.classList.add("hidden");
         toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
-        if (isOpen) {
-          this.trapFocusInDropdown(false); // Release trap on close
-        }
       }
       if (this.state.isMobileMenuOpen && mobileMenu && !event.target.closest('#mobile-menu') && !event.target.closest('.hamburger-menu')) {
         this.setState({
@@ -140,24 +152,31 @@ class Header extends Component {
       const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
       const mobileMenu = document.getElementById("mobile-menu");
       const hamburgerButton = document.querySelector(".hamburger-menu");
-      if (event.key === 'Escape') {
-        if (userMenu && !userMenu.classList.contains("hidden")) {
-          const isOpen = !userMenu.classList.contains("hidden"); // Before close
-          userMenu.classList.add("hidden");
-          toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
-          const toggleButton = document.querySelector(".user_custom_login");
-          if (toggleButton) toggleButton.focus();
-          if (isOpen) {
-            this.trapFocusInDropdown(false); // Release trap on close
-          }
-        }
-        if (this.state.isMobileMenuOpen && mobileMenu) {
-          this.setState({
-            isMobileMenuOpen: false
-          });
-          hamburgerButton.setAttribute("aria-expanded", "false");
-          hamburgerButton.focus();
-        }
+
+      // if (event.key === 'Escape') {
+      //   if (userMenu && !userMenu.classList.contains("hidden")) {
+      //     const isOpen = !userMenu.classList.contains("hidden"); // Before close
+      //     userMenu.classList.add("hidden");
+      //     toggleButtons.forEach((btn) => btn.setAttribute("aria-expanded", "false"));
+      //     const toggleButton = document.querySelector(".user_custom_login");
+      //     if (toggleButton) toggleButton.focus();
+      //     if (isOpen) {
+      //       this.trapFocusInDropdown(false); // Release trap on close
+      //     }
+      //   }
+      //   if (this.state.isMobileMenuOpen && mobileMenu) {
+      //     this.setState({ isMobileMenuOpen: false });
+      //     hamburgerButton.setAttribute("aria-expanded", "false");
+      //     hamburgerButton.focus();
+      //   }
+      // }
+
+      if (this.state.isMobileMenuOpen && mobileMenu) {
+        this.setState({
+          isMobileMenuOpen: false
+        });
+        hamburgerButton.setAttribute("aria-expanded", "false");
+        hamburgerButton.focus();
       }
       if (event.altKey && event.code === 'KeyC') {
         event.preventDefault();
@@ -336,22 +355,37 @@ class Header extends Component {
       }, 100);
     });
     // Updated toggle handler for dropdown open/close with focus trap
+    // handleDropdownToggle = (e) => {
+    //   e.stopPropagation(); // Prevent bubbling
+    //   const userMenu = document.getElementById("user-menu");
+    //   const isHidden = userMenu.classList.contains("hidden");
+    //   const willOpen = isHidden;
+    //   userMenu.classList.toggle("hidden");
+    //   const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
+    //   toggleButtons.forEach((btn) => btn.setAttribute("aria-expanded", willOpen ? "true" : "false"));
+    //   // alert(willOpen)
+    //   if (willOpen) {
+    //     // Defer trap to after class toggle settles
+    //     // alert("h")
+    //     setTimeout(() => this.trapFocusInDropdown(true), 0);
+    //   } else {
+    //     this.trapFocusInDropdown(false);
+    //   }
+    // };
     _defineProperty(this, "handleDropdownToggle", e => {
-      e.stopPropagation(); // Prevent bubbling
-      const userMenu = document.getElementById("user-menu");
-      const isHidden = userMenu.classList.contains("hidden");
-      const willOpen = isHidden;
-      userMenu.classList.toggle("hidden");
-      const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
-      toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", willOpen ? "true" : "false"));
-      // alert(willOpen)
-      if (willOpen) {
-        // Defer trap to after class toggle settles
-        // alert("h")
-        setTimeout(() => this.trapFocusInDropdown(true), 0);
-      } else {
-        this.trapFocusInDropdown(false);
-      }
+      e.stopPropagation();
+      this.setState(prevState => {
+        const willOpen = !prevState.isDropdownOpen;
+        const userMenu = document.getElementById("user-menu");
+        if (userMenu) {
+          userMenu.classList.toggle("hidden", !willOpen);
+        }
+        const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
+        toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", willOpen ? "true" : "false"));
+        return {
+          isDropdownOpen: willOpen
+        };
+      });
     });
     this.state = {
       darkLanguages: [],
@@ -360,7 +394,8 @@ class Header extends Component {
       setText: '',
       isMobileMenuOpen: false,
       resumeCourseUrl: null,
-      profileUrl: ''
+      profileUrl: '',
+      isDropdownOpen: false
     };
     this.dropdownRef = /*#__PURE__*/React.createRef();
     this.nonDropdownNodes = []; // Track disabled non-dropdown nodes
@@ -575,6 +610,8 @@ class Header extends Component {
     document.removeEventListener('keydown', this.handleKeyDown);
   }
   render() {
+    const exploreActive = window.location.href.includes('/explore-courses/') && !window.location.href.includes('/explore-courses/dashboard/');
+    const dashboardActive = window.location.href.includes('/explore-courses/dashboard/');
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("a", {
       className: "stmc",
       href: window.location.href.includes('/learning/course/') ? '#mx-main' : '#main'
@@ -619,19 +656,23 @@ class Header extends Component {
       className: "navbar-nav mr-auto mt-2 mt-lg-0 menu_list"
     }, /*#__PURE__*/React.createElement("li", {
       className: "nav-item"
-    }, /*#__PURE__*/React.createElement("a", {
-      className: window.location.href.includes('/explore-courses/') && !window.location.href.includes('/explore-courses/dashboard/') ? 'active tab-nav-link' : 'tab-nav-link',
+    }, /*#__PURE__*/React.createElement("a", _extends({
+      className: exploreActive ? 'active tab-nav-link' : 'tab-nav-link',
       href: "/explore-courses/",
-      accessKey: "c",
-      "aria-current": "page"
-    }, "Explore Courses")), /*#__PURE__*/React.createElement("li", {
+      accessKey: "c"
+      // Only adds aria-current="page" if active; nothing otherwise
+    }, exploreActive && {
+      'aria-current': 'page'
+    }), "Explore Courses")), /*#__PURE__*/React.createElement("li", {
       className: "nav-item"
-    }, /*#__PURE__*/React.createElement("a", {
-      className: window.location.href.includes('/explore-courses/dashboard/') ? 'active tab-nav-link' : 'tab-nav-link',
+    }, /*#__PURE__*/React.createElement("a", _extends({
+      className: dashboardActive ? 'active tab-nav-link' : 'tab-nav-link',
       href: "/explore-courses/dashboard/programs",
-      accessKey: "s",
-      "aria-current": "page"
-    }, "Dashboard"))), /*#__PURE__*/React.createElement("div", {
+      accessKey: "s"
+      // Only adds aria-current="page" if active; nothing otherwise
+    }, dashboardActive && {
+      'aria-current': 'page'
+    }), "Dashboard"))), /*#__PURE__*/React.createElement("div", {
       className: "search_box1"
     }, /*#__PURE__*/React.createElement("form", {
       className: "headerSearchForm",
@@ -706,7 +747,7 @@ class Header extends Component {
       className: "toggle-user-dropdown",
       role: "button",
       "aria-label": "Options Menu",
-      "aria-expanded": "false",
+      "aria-expanded": this.state.isDropdownOpen ? "true" : "false",
       tabIndex: -1,
       "aria-controls": "user-menu",
       onClick: this.handleDropdownToggle,
@@ -716,8 +757,28 @@ class Header extends Component {
           this.handleDropdownToggle(e);
         }
       }
-    }, /*#__PURE__*/React.createElement(CaretDropDownIcon, null)), /*#__PURE__*/React.createElement("div", {
-      className: "dropdown-user-menu hidden",
+    }, /*#__PURE__*/React.createElement(CaretDropDownIcon, null)), /*#__PURE__*/React.createElement(FocusTrap, {
+      active: this.state.isDropdownOpen,
+      focusTrapOptions: {
+        escapeDeactivates: true,
+        // Close on ESC
+        clickOutsideDeactivates: true,
+        // Close on outside click
+        onDeactivate: () => {
+          this.setState({
+            isDropdownOpen: false
+          });
+          const userMenu = document.getElementById("user-menu");
+          if (userMenu) userMenu.classList.add("hidden");
+          const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
+          toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+          // Return focus to toggle
+          const toggleButton = document.querySelector('.user_custom_login');
+          if (toggleButton) toggleButton.focus();
+        }
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: `dropdown-user-menu ${this.state.isDropdownOpen ? '' : 'hidden'}`,
       "aria-label": "More Options",
       role: "menu",
       id: "user-menu",
@@ -744,7 +805,7 @@ class Header extends Component {
     }, /*#__PURE__*/React.createElement("a", {
       href: getConfig().LOGOUT_URL,
       role: "menuitem"
-    }, "Sign Out")))))), /*#__PURE__*/React.createElement("div", {
+    }, "Sign Out"))))))), /*#__PURE__*/React.createElement("div", {
       className: `mobile-menu ${this.state.isMobileMenuOpen ? '' : 'hidden'}`,
       "aria-label": "More",
       role: "menu",
