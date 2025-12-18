@@ -12,6 +12,7 @@ import { getConfig } from '@edx/frontend-platform';
 import CaretDropDownIcon from './Icons';
 import $ from 'jquery';
 import AudioSearch from './AudioSearch';
+import FocusTrap from 'focus-trap-react';
 class Header extends Component {
   constructor(props) {
     var _this;
