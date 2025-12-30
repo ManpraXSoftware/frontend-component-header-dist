@@ -751,11 +751,11 @@ class AudioSearch extends Component {
 
             // }
 
-            // setTimeout(() => {
-            //     if (this.state.isListening) {
-            //       this.playBeepSound();
-            //     }
-            //   }, 3000);
+            setTimeout(() => {
+              if (this.state.isListening) {
+                this.playBeepSound();
+              }
+            }, 3000);
           });
         } catch (error) {
           console.error('Error starting MediaRecorder or SpeechRecognition:', {
