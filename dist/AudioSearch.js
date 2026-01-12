@@ -121,26 +121,40 @@ class AudioSearch extends Component {
                 canRespeak: true,
                 debugMessage: 'Transcription successful: ' + data.text,
                 isListening: false,
-                modalMessage: ''
+                modalMessage: '',
+                hasAnnouncedError: true
               }, () => {
                 console.log('State updated with transcription', {
                   finalText: this.state.finalText,
                   canSearch: this.state.canSearch,
                   timestamp: new Date().toISOString()
                 });
-                const voiceText = document.getElementById('voiceText');
-                if (voiceText) {
-                  voiceText.focus();
-                }
-                this.forceUpdate();
+                // const voiceText = document.getElementById('voiceText');
+                // if (voiceText) {
+
+                //   voiceText.focus();
+
+                // }
+                if (!this.state.hasAnnouncedError) return;
+                // this.forceUpdate();
               });
+              const voiceText = document.getElementById('voiceText');
+              if (voiceText) {
+                voiceText.setAttribute('aria-live', 'assertive');
+                voiceText.focus();
+                setTimeout(() => {
+                  if (voiceText) {
+                    voiceText.setAttribute('aria-live', 'polite');
+                  }
+                }, 2000);
+              }
             } else {
               console.log('Transcription returned empty text, using interimText', {
                 interimText: this.state.interimText,
                 transcriptBuffer: this.state.transcriptBuffer,
                 timestamp: new Date().toISOString()
               });
-              const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'No speech detected. Please speak clearly and try again.';
+              const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'Sorry, I couldn’t understand that. Please speak again.';
               if (this.sessionIdRef.current !== currentSessionId) return;
               this.setState({
                 debugMessage: 'No speech detected in audio, falling back to interimText.',
@@ -220,7 +234,7 @@ class AudioSearch extends Component {
             stack: error.stack,
             timestamp: new Date().toISOString()
           });
-          const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'Error connecting to transcription service. Please try again.';
+          const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'Sorry, I couldn’t understand that. Please speak again.';
           if (this.sessionIdRef.current !== currentSessionId) return;
           this.setState({
             debugMessage: 'Transcription fetch error: ' + error.message,
@@ -261,7 +275,7 @@ class AudioSearch extends Component {
           });
           return;
         }
-        const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'Error processing audio. Please try again.';
+        const fallbackText = this.state.transcriptBuffer.join(' ') || this.state.interimText || 'Sorry, I couldn’t understand that. Please speak again.';
         this.setState({
           debugMessage: 'Processing error: ' + error.message,
           showModal: true,
@@ -427,7 +441,8 @@ class AudioSearch extends Component {
         canSearch: false,
         transcriptBuffer: [],
         modalMessage: 'Preparing to record, please wait...',
-        recordingStartTime: null
+        recordingStartTime: null,
+        hasAnnouncedError: false
       });
       try {
         // Warn about HTTP in development, block in production
@@ -881,7 +896,8 @@ class AudioSearch extends Component {
         modalMessage: 'Processing transcription...',
         finalText: _this.state.transcriptBuffer.join(' ') || _this.state.interimText || 'Processing transcription...',
         canRespeak: false,
-        isFocusOnSTopBTN: false
+        isFocusOnSTopBTN: false,
+        hasAnnouncedError: false
       }, () => {
         console.log('State updated with stop initiated', {
           finalText: _this.state.finalText,
@@ -1160,7 +1176,8 @@ class AudioSearch extends Component {
       modalMessage: '',
       recordingStartTime: null,
       announcement: '',
-      isFocusOnSTopBTN: false
+      isFocusOnSTopBTN: false,
+      hasAnnouncedError: false
     };
     this.mediaRecorder = /*#__PURE__*/React.createRef();
     this.streamRef = /*#__PURE__*/React.createRef();
@@ -1184,14 +1201,11 @@ class AudioSearch extends Component {
         announcement: 'Voice search dialog closed'
       });
     }
-    if (this.state.finalText !== prevState.finalText || this.state.interimText !== prevState.interimText) {
-      this.forceUpdate();
-      console.log('Text updated, forcing re-render', {
-        finalText: this.state.finalText,
-        interimText: this.state.interimText,
-        timestamp: new Date().toISOString()
-      });
-    }
+
+    // if (this.state.finalText !== prevState.finalText || this.state.interimText !== prevState.interimText) {
+    //   this.forceUpdate();
+    //   console.log('Text updated, forcing re-render', { finalText: this.state.finalText, interimText: this.state.interimText, timestamp: new Date().toISOString() });
+    // }
   }
   componentDidMount() {
     document.addEventListener('keydown', this.handleEscKey);
