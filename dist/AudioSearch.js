@@ -1299,17 +1299,22 @@ class AudioSearch extends Component {
       className: "mx-modal-footer btn-modal-search"
     }, /*#__PURE__*/React.createElement("button", {
       id: "speakButton",
-      onClick: this.handleSpeak,
-      className: "btn",
-      disabled: this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak
+      onClick: this.handleSpeak
+      // className="btn"
+      ,
+      className: `btn ${this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak ? 'mx-disabled' : ''}`
+      // disabled={this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak}
       // aria-label="Start recording"
       ,
       "aria-label": this.getSpeakAriaLabel()
     }, "Speak"), /*#__PURE__*/React.createElement("button", {
       id: "stopButton",
-      onClick: () => this.handleStopRecording(false),
-      className: "btn",
-      disabled: !this.state.isListening || this.isStoppingRef.current
+      onClick: () => this.handleStopRecording(false)
+      // className="btn"
+      ,
+      className: `btn ${!this.state.isListening || this.isStoppingRef.current ? 'mx-disabled' : ''}`
+
+      // disabled={!this.state.isListening || this.isStoppingRef.current}
       // aria-label="Stop recording"
       ,
       "aria-label": this.getStopAriaLabel()
@@ -1340,9 +1345,12 @@ class AudioSearch extends Component {
             this.handleStopRecording(true);
           }
         }
-      },
-      className: "btn",
-      disabled: !this.state.canSearch
+      }
+      // className="btn"
+      // disabled={!this.state.canSearch}
+      ,
+      className: `btn ${!this.state.canSearch ? 'mx-disabled' : ''}`
+
       // aria-label="Search with transcribed text"
       ,
       "aria-label": this.getSearchAriaLabel()
