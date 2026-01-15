@@ -1336,8 +1336,16 @@ class AudioSearch extends Component {
       id: "speak-desc",
       className: "sr-only"
     }, this.getSpeakDescription()), /*#__PURE__*/React.createElement("button", {
-      id: "stopButton",
-      onClick: () => this.handleStopRecording(false)
+      id: "stopButton"
+      // onClick={() => this.handleStopRecording(false)}
+      ,
+      onClick: e => {
+        if (!this.state.isListening || this.isStoppingRef.current) {
+          e.preventDefault();
+          return;
+        }
+        this.handleStopRecording(false); // Only calls if enabled
+      }
       // className="btn"
       ,
       className: `btn ${!this.state.isListening || this.isStoppingRef.current ? 'mx-disabled' : ''}`
