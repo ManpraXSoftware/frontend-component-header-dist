@@ -1056,26 +1056,44 @@ class AudioSearch extends Component {
         }
       }
     });
-    _defineProperty(this, "getSpeakAriaLabel", () => {
-      const base = 'Speak button';
+    // getSpeakAriaLabel = () => {
+    //   const base = 'Speak button';
+    //   if (this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak) {
+    //     return `${base}, unavailable`;
+    //   }
+    //   return `${base}, select to start speaking`;
+    // };
+    // getStopAriaLabel = () => {
+    //   const base = 'Stop button';
+    //   if (!this.state.isListening || this.isStoppingRef.current) {
+    //     return `${base}, unavailable`;
+    //   }
+    //   return `${base}, select to stop speaking`;
+    // };
+    // getSearchAriaLabel = () => {
+    //   const base = 'Search button';
+    //   if (!this.state.canSearch) {
+    //     return `${base}, unavailable`;
+    //   }
+    //   return `${base}, select to search with transcribed text`;
+    // };
+    _defineProperty(this, "getSpeakDescription", () => {
       if (this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak) {
-        return `${base}, unavailable`;
+        return 'unavailable';
       }
-      return `${base}, select to start speaking`;
+      return 'select to start speaking';
     });
-    _defineProperty(this, "getStopAriaLabel", () => {
-      const base = 'Stop button';
+    _defineProperty(this, "getStopDescription", () => {
       if (!this.state.isListening || this.isStoppingRef.current) {
-        return `${base}, unavailable`;
+        return 'unavailable';
       }
-      return `${base}, select to stop speaking`;
+      return 'select to stop speaking';
     });
-    _defineProperty(this, "getSearchAriaLabel", () => {
-      const base = 'Search button';
+    _defineProperty(this, "getSearchDescription", () => {
       if (!this.state.canSearch) {
-        return `${base}, unavailable`;
+        return 'unavailable';
       }
-      return `${base}, select to search with transcribed text`;
+      return 'select to search with transcribed text';
     });
     _defineProperty(this, "playBeepSound", async () => {
       if (!window.AudioContext) {
@@ -1281,9 +1299,14 @@ class AudioSearch extends Component {
       className: "btn-close",
       onClick: () => this.handleStopRecording(true)
       // aria-label="Close"
+      // aria-label="Close button, select to close voice search dialog"
       ,
-      "aria-label": "Close button, select to close voice search dialog"
-    })), /*#__PURE__*/React.createElement("div", {
+      "aria-label": "Close",
+      "aria-describedby": "close-desc"
+    }), /*#__PURE__*/React.createElement("span", {
+      id: "close-desc",
+      className: "sr-only"
+    }, "select to close voice search dialog")), /*#__PURE__*/React.createElement("div", {
       className: "modal-body"
     }, /*#__PURE__*/React.createElement("p", {
       className: "text-gray-700 mb-4 text-base",
@@ -1305,9 +1328,14 @@ class AudioSearch extends Component {
       className: `btn ${this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak ? 'mx-disabled' : ''}`
       // disabled={this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak}
       // aria-label="Start recording"
+      // aria-label={this.getSpeakAriaLabel()}
       ,
-      "aria-label": this.getSpeakAriaLabel()
-    }, "Speak"), /*#__PURE__*/React.createElement("button", {
+      "aria-label": "speak",
+      "aria-describedby": "speak-desc"
+    }, "Speak"), /*#__PURE__*/React.createElement("span", {
+      id: "speak-desc",
+      className: "sr-only"
+    }, this.getSpeakDescription()), /*#__PURE__*/React.createElement("button", {
       id: "stopButton",
       onClick: () => this.handleStopRecording(false)
       // className="btn"
@@ -1316,11 +1344,16 @@ class AudioSearch extends Component {
 
       // disabled={!this.state.isListening || this.isStoppingRef.current}
       // aria-label="Stop recording"
+      // aria-label={this.getStopAriaLabel()}
       ,
-      "aria-label": this.getStopAriaLabel()
+      "aria-label": "Stop",
+      "aria-describedby": "stop-desc"
     }, /*#__PURE__*/React.createElement(FontAwesomeIcon, {
       icon: faStop
-    }), " Stop"), /*#__PURE__*/React.createElement("button", {
+    }), " Stop"), /*#__PURE__*/React.createElement("span", {
+      id: "stop-desc",
+      className: "sr-only"
+    }, this.getStopDescription()), /*#__PURE__*/React.createElement("button", {
       onClick: event => {
         event.stopPropagation();
         console.log('Search button clicked', {
@@ -1352,9 +1385,14 @@ class AudioSearch extends Component {
       className: `btn ${!this.state.canSearch ? 'mx-disabled' : ''}`
 
       // aria-label="Search with transcribed text"
+      // aria-label={this.getSearchAriaLabel()}
       ,
-      "aria-label": this.getSearchAriaLabel()
-    }, "Search")))))));
+      "aria-label": "Search",
+      "aria-describedby": "search-desc"
+    }, "Search"), /*#__PURE__*/React.createElement("span", {
+      id: "search-desc",
+      className: "sr-only"
+    }, this.getSearchDescription())))))));
   }
 }
 export default AudioSearch;
