@@ -1331,8 +1331,8 @@ class AudioSearch extends Component {
       // aria-label={this.getSpeakAriaLabel()}
       ,
       "aria-label": "speak",
-      "aria-describedby": "speak-desc",
-      "aria-disabled": this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak ? 'true' : 'false'
+      "aria-describedby": "speak-desc"
+      // aria-disabled={this.state.isListening || this.isStartingRef.current || this.isStoppingRef.current || !this.state.canRespeak ? 'true' : 'false'}
     }, "Speak"), /*#__PURE__*/React.createElement("span", {
       id: "speak-desc",
       className: "sr-only"
@@ -1356,8 +1356,8 @@ class AudioSearch extends Component {
       // aria-label={this.getStopAriaLabel()}
       ,
       "aria-label": "Stop",
-      "aria-describedby": "stop-desc",
-      "aria-disabled": !this.state.isListening || this.isStoppingRef.current ? 'true' : 'false'
+      "aria-describedby": "stop-desc"
+      // aria-disabled={!this.state.isListening || this.isStoppingRef.current ? 'true' : 'false'}
     }, /*#__PURE__*/React.createElement(FontAwesomeIcon, {
       icon: faStop
     }), " Stop"), /*#__PURE__*/React.createElement("span", {
@@ -1398,8 +1398,8 @@ class AudioSearch extends Component {
       // aria-label={this.getSearchAriaLabel()}
       ,
       "aria-label": "Search",
-      "aria-describedby": "search-desc",
-      "aria-disabled": !this.state.canSearch ? 'true' : 'false'
+      "aria-describedby": "search-desc"
+      // aria-disabled={!this.state.canSearch? 'true' : 'false'}
     }, "Search"), /*#__PURE__*/React.createElement("span", {
       id: "search-desc",
       className: "sr-only"
