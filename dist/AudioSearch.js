@@ -1338,7 +1338,8 @@ class AudioSearch extends Component {
       id: "speak-desc",
       className: "sr-only"
     }, this.getSpeakDescription()), /*#__PURE__*/React.createElement("button", {
-      id: "stopButton"
+      id: "stopButton",
+      type: "button"
       // onClick={() => this.handleStopRecording(false)}
       ,
       onClick: e => {
