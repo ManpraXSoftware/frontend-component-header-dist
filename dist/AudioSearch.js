@@ -1322,6 +1322,7 @@ class AudioSearch extends Component {
       className: "mx-modal-footer btn-modal-search"
     }, /*#__PURE__*/React.createElement("button", {
       id: "speakButton",
+      type: "button",
       onClick: this.handleSpeak
       // className="btn"
       ,
@@ -1365,6 +1366,7 @@ class AudioSearch extends Component {
       className: "sr-only"
     }, this.getStopDescription()), /*#__PURE__*/React.createElement("button", {
       onClick: event => {
+        type = "button";
         event.stopPropagation();
         console.log('Search button clicked', {
           finalText: this.state.finalText,
