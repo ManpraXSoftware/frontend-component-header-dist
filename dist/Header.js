@@ -466,7 +466,8 @@ class Header extends Component {
     const localizeKey = document.createElement("script");
     localizeKey.innerText = Localize.initialize({
       key: mx_localizekey,
-      rememberLanguage: true
+      rememberLanguage: true,
+      retranslateOnNewPhrases: true
     });
     const langSelect = document.createElement("select");
     langSelect.id = "langOptions";
@@ -486,7 +487,8 @@ class Header extends Component {
       console.log("initialing localizer ...");
       Localize.initialize({
         key: mx_localizekey,
-        rememberLanguage: true
+        rememberLanguage: true,
+        retranslateOnNewPhrases: true
       });
       Localize.getAvailableLanguages((error, data) => {
         if (error) {
