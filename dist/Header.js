@@ -15,91 +15,91 @@ import AudioSearch from './AudioSearch';
 import FocusTrap from 'focus-trap-react';
 class Header extends Component {
   constructor(props) {
-    var _this;
     super(props);
-    _this = this;
-    // Focus trap for user dropdown (adapted from AudioSearch logic: disable/restore, no wrapping)
-    _defineProperty(this, "trapFocusInDropdown", function () {
-      let shouldTrap = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-      const dropdown = document.getElementById('user-menu');
-      if (!dropdown) return;
-      if (shouldTrap) {
-        // Collect and disable non-dropdown focusables (matching your original logic)
-        const dropdownNodes = Array.from(dropdown.querySelectorAll('*'));
-        const nonDropdownNodes = Array.from(document.querySelectorAll(`body *:not(#user-menu):not(#user-menu *)`)).filter(node => node.matches(_this.focusableSelector));
-        _this.nonDropdownNodes = [];
-        for (let i = 0; i < nonDropdownNodes.length; i++) {
-          const node = nonDropdownNodes[i];
-          if (!dropdownNodes.includes(node)) {
-            node._prevTabindex = node.hasAttribute('tabindex') ? node.getAttribute('tabindex') : 'none';
-            node.setAttribute('tabindex', '-1');
-            node.style.outline = 'none';
-            _this.nonDropdownNodes.push(node);
-          }
+    _defineProperty(this, "handleBfcacheRestore", event => {
+      if (event.persisted) {
+        const edxloggedin = document.cookie.split(';').find(c => c.trim().startsWith('edxloggedin='));
+        const isLoggedIn = edxloggedin && edxloggedin.trim().split('=')[1] === 'true';
+        if (!isLoggedIn) {
+          window.location.replace(getConfig().LOGIN_URL);
         }
-
-        // Focus first focusable in dropdown
-        const firstFocusable = document.querySelector('#user-menu a[role="menuitem"]'); // First menu item
-        if (firstFocusable) {
-          firstFocusable.focus();
-        }
-        console.log('Dropdown focus trap applied', {
-          dropdownNodes: dropdownNodes.length,
-          nonDropdownNodes: nonDropdownNodes.length,
-          timestamp: new Date().toISOString()
-        });
-      } else if (_this.nonDropdownNodes.length > 0) {
-        // Restore non-dropdown focusables (matching your original logic)
-        const failedRestorations = [];
-        for (let i = 0; i < _this.nonDropdownNodes.length; i++) {
-          const node = _this.nonDropdownNodes[i];
-          if (node._prevTabindex !== 'none') {
-            node.setAttribute('tabindex', node._prevTabindex);
-          } else {
-            node.removeAttribute('tabindex');
-          }
-          node.style.outline = '';
-          if (node.hasAttribute('tabindex') && node.getAttribute('tabindex') === '-1') {
-            failedRestorations.push({
-              tag: node.tagName,
-              id: node.id,
-              class: node.className
-            });
-          }
-          node._prevTabindex = null;
-        }
-        console.log('Dropdown tabindex restored', {
-          restoredNodes: _this.nonDropdownNodes.length,
-          failedRestorations,
-          timestamp: new Date().toISOString()
-        });
-
-        // Return focus to trigger (user image div)
-        const toggleButton = document.querySelector('.user_custom_login');
-        if (toggleButton) {
-          toggleButton.focus();
-          console.log('Focused user image after dropdown close', {
-            tag: toggleButton.tagName,
-            id: toggleButton.id,
-            class: toggleButton.className,
-            timestamp: new Date().toISOString()
-          });
-        } else {
-          // Fallback to first page focusable
-          const firstPageFocusable = document.querySelector(_this.focusableSelector);
-          if (firstPageFocusable) {
-            firstPageFocusable.focus();
-            console.log('Focused first page element after dropdown close', {
-              tag: firstPageFocusable.tagName,
-              id: firstPageFocusable.id,
-              class: firstPageFocusable.className,
-              timestamp: new Date().toISOString()
-            });
-          }
-        }
-        _this.nonDropdownNodes = [];
       }
     });
+    // Focus trap for user dropdown (adapted from AudioSearch logic: disable/restore, no wrapping)
+    // trapFocusInDropdown = (shouldTrap = true) => {
+    //   const dropdown = document.getElementById('user-menu');
+    //   if (!dropdown) return;
+    //   if (shouldTrap) {
+    //     // Collect and disable non-dropdown focusables (matching your original logic)
+    //     const dropdownNodes = Array.from(dropdown.querySelectorAll('*'));
+    //     const nonDropdownNodes = Array.from(document.querySelectorAll(`body *:not(#user-menu):not(#user-menu *)`)).filter(node => node.matches(this.focusableSelector));
+    //     this.nonDropdownNodes = [];
+    //     for (let i = 0; i < nonDropdownNodes.length; i++) {
+    //       const node = nonDropdownNodes[i];
+    //       if (!dropdownNodes.includes(node)) {
+    //         node._prevTabindex = node.hasAttribute('tabindex') ? node.getAttribute('tabindex') : 'none';
+    //         node.setAttribute('tabindex', '-1');
+    //         node.style.outline = 'none';
+    //         this.nonDropdownNodes.push(node);
+    //       }
+    //     }
+    //     // Focus first focusable in dropdown
+    //     const firstFocusable = document.querySelector('#user-menu a[role="menuitem"]'); // First menu item
+    //     if (firstFocusable) {
+    //       firstFocusable.focus();
+    //     }
+    //     console.log('Dropdown focus trap applied', { 
+    //       dropdownNodes: dropdownNodes.length, 
+    //       nonDropdownNodes: nonDropdownNodes.length,
+    //       timestamp: new Date().toISOString() 
+    //     });
+    //   } else if (this.nonDropdownNodes.length > 0) {
+    //     // Restore non-dropdown focusables (matching your original logic)
+    //     const failedRestorations = [];
+    //     for (let i = 0; i < this.nonDropdownNodes.length; i++) {
+    //       const node = this.nonDropdownNodes[i];
+    //       if (node._prevTabindex !== 'none') {
+    //         node.setAttribute('tabindex', node._prevTabindex);
+    //       } else {
+    //         node.removeAttribute('tabindex');
+    //       }
+    //       node.style.outline = '';
+    //       if (node.hasAttribute('tabindex') && node.getAttribute('tabindex') === '-1') {
+    //         failedRestorations.push({ tag: node.tagName, id: node.id, class: node.className });
+    //       }
+    //       node._prevTabindex = null;
+    //     }
+    //     console.log('Dropdown tabindex restored', {
+    //       restoredNodes: this.nonDropdownNodes.length,
+    //       failedRestorations,
+    //       timestamp: new Date().toISOString(),
+    //     });
+    //     // Return focus to trigger (user image div)
+    //     const toggleButton = document.querySelector('.user_custom_login');
+    //     if (toggleButton) {
+    //       toggleButton.focus();
+    //       console.log('Focused user image after dropdown close', {
+    //         tag: toggleButton.tagName,
+    //         id: toggleButton.id,
+    //         class: toggleButton.className,
+    //         timestamp: new Date().toISOString(),
+    //       });
+    //     } else {
+    //       // Fallback to first page focusable
+    //       const firstPageFocusable = document.querySelector(this.focusableSelector);
+    //       if (firstPageFocusable) {
+    //         firstPageFocusable.focus();
+    //         console.log('Focused first page element after dropdown close', {
+    //           tag: firstPageFocusable.tagName,
+    //           id: firstPageFocusable.id,
+    //           class: firstPageFocusable.className,
+    //           timestamp: new Date().toISOString(),
+    //         });
+    //       }
+    //     }
+    //     this.nonDropdownNodes = [];
+    //   }
+    // };
     _defineProperty(this, "handleSearchClick", e => {
       e.preventDefault();
       let searchData = this.state.setText;
@@ -122,24 +122,13 @@ class Header extends Component {
       const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
       const mobileMenu = document.getElementById("mobile-menu");
       const hamburgerButton = document.querySelector(".hamburger-menu");
-
-      // if (userMenu && !userMenu.classList.contains("hidden") && 
-      //     !event.target.closest('.secondary') &&
-      //     !event.target.closest('#user-menu')) {
-      //   const isOpen = !userMenu.classList.contains("hidden"); // Before close
-      //   userMenu.classList.add("hidden");
-      //   toggleButtons.forEach((btn) => btn.setAttribute("aria-expanded", "false"));
-      //   if (isOpen) {
-      //     this.trapFocusInDropdown(false); // Release trap on close
-      //   }
-      // }
-
-      if (this.state.isDropdownOpen && userMenu && !event.target.closest('.secondary') && !event.target.closest('#user-menu')) {
-        this.setState({
-          isDropdownOpen: false
-        });
+      if (userMenu && !userMenu.classList.contains("hidden") && !event.target.closest('.secondary') && !event.target.closest('#user-menu')) {
+        const isOpen = !userMenu.classList.contains("hidden"); // Before close
         userMenu.classList.add("hidden");
         toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+        // if (isOpen) {
+        //   this.trapFocusInDropdown(false); // Release trap on close
+        // }
       }
       if (this.state.isMobileMenuOpen && mobileMenu && !event.target.closest('#mobile-menu') && !event.target.closest('.hamburger-menu')) {
         this.setState({
@@ -153,37 +142,46 @@ class Header extends Component {
       const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
       const mobileMenu = document.getElementById("mobile-menu");
       const hamburgerButton = document.querySelector(".hamburger-menu");
-
-      // if (event.key === 'Escape') {
-      //   if (userMenu && !userMenu.classList.contains("hidden")) {
-      //     const isOpen = !userMenu.classList.contains("hidden"); // Before close
-      //     userMenu.classList.add("hidden");
-      //     toggleButtons.forEach((btn) => btn.setAttribute("aria-expanded", "false"));
-      //     const toggleButton = document.querySelector(".user_custom_login");
-      //     if (toggleButton) toggleButton.focus();
-      //     if (isOpen) {
-      //       this.trapFocusInDropdown(false); // Release trap on close
-      //     }
-      //   }
-      //   if (this.state.isMobileMenuOpen && mobileMenu) {
-      //     this.setState({ isMobileMenuOpen: false });
-      //     hamburgerButton.setAttribute("aria-expanded", "false");
-      //     hamburgerButton.focus();
-      //   }
-      // }
-
-      if (this.state.isMobileMenuOpen && mobileMenu) {
-        this.setState({
-          isMobileMenuOpen: false
-        });
-        hamburgerButton.setAttribute("aria-expanded", "false");
-        hamburgerButton.focus();
+      if (event.key === 'Escape') {
+        if (userMenu && !userMenu.classList.contains("hidden")) {
+          const isOpen = !userMenu.classList.contains("hidden"); // Before close
+          userMenu.classList.add("hidden");
+          toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+          const toggleButton = document.querySelector(".user_custom_login");
+          if (toggleButton) toggleButton.focus();
+          // if (isOpen) {
+          //   this.trapFocusInDropdown(false); // Release trap on close
+          // }
+        }
+        if (this.state.isMobileMenuOpen && mobileMenu) {
+          this.setState({
+            isMobileMenuOpen: false
+          });
+          hamburgerButton.setAttribute("aria-expanded", "false");
+          hamburgerButton.focus();
+        }
       }
       if (event.altKey && event.code === 'KeyC') {
         event.preventDefault();
         event.stopPropagation();
         window.location.href = '/explore-courses/';
         return;
+      }
+
+      // Arrow key navigation for user dropdown (only when open)
+      if (!userMenu || userMenu.classList.contains("hidden")) return; // Skip if not open
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault(); // Prevent default scrolling
+        const menuItems = Array.from(userMenu.querySelectorAll('a[role="menuitem"]')); // All focusable menuitems
+        if (menuItems.length === 0) return;
+        const currentIndex = menuItems.findIndex(item => document.activeElement === item);
+        let nextIndex;
+        if (event.key === 'ArrowDown') {
+          nextIndex = currentIndex < menuItems.length - 1 ? currentIndex + 1 : 0; // Loop to top
+        } else {
+          nextIndex = currentIndex > 0 ? currentIndex - 1 : menuItems.length - 1; // Loop to bottom
+        }
+        menuItems[nextIndex].focus(); // Move focus
       }
     });
     _defineProperty(this, "handleLangOptionsClick", e => {
@@ -356,37 +354,60 @@ class Header extends Component {
       }, 100);
     });
     // Updated toggle handler for dropdown open/close with focus trap
-    // handleDropdownToggle = (e) => {
-    //   e.stopPropagation(); // Prevent bubbling
-    //   const userMenu = document.getElementById("user-menu");
-    //   const isHidden = userMenu.classList.contains("hidden");
-    //   const willOpen = isHidden;
-    //   userMenu.classList.toggle("hidden");
-    //   const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
-    //   toggleButtons.forEach((btn) => btn.setAttribute("aria-expanded", willOpen ? "true" : "false"));
-    //   // alert(willOpen)
-    //   if (willOpen) {
-    //     // Defer trap to after class toggle settles
-    //     // alert("h")
-    //     setTimeout(() => this.trapFocusInDropdown(true), 0);
-    //   } else {
-    //     this.trapFocusInDropdown(false);
-    //   }
-    // };
     _defineProperty(this, "handleDropdownToggle", e => {
+      console.log('Toggle fired from:', e.target.className || e.target.tagName, 'Active element:', document.activeElement?.className);
       e.stopPropagation();
-      this.setState(prevState => {
-        const willOpen = !prevState.isDropdownOpen;
-        const userMenu = document.getElementById("user-menu");
-        if (userMenu) {
-          userMenu.classList.toggle("hidden", !willOpen);
+      const userMenu = document.getElementById("user-menu");
+      const isHidden = userMenu.classList.contains("hidden");
+      const willOpen = isHidden;
+      const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
+      if (willOpen) {
+        // alert(willOpen)
+        userMenu.classList.remove("hidden");
+        toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "true"));
+        setTimeout(() => {
+          const dropdown = document.getElementById('user-menu');
+          if (dropdown) {
+            dropdown.addEventListener('focusout', this.handleFocusOut);
+          }
+        }, 0);
+      } else {
+        // Close: add hidden (no-op if already), set aria false, focus trigger, remove listener
+        userMenu.classList.add("hidden");
+        toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+        const toggleButton = document.querySelector(".user_custom_login");
+        if (toggleButton) {
+          toggleButton.focus();
         }
-        const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
-        toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", willOpen ? "true" : "false"));
-        return {
-          isDropdownOpen: willOpen
-        };
-      });
+        const dropdown = document.getElementById('user-menu');
+        if (dropdown) {
+          dropdown.removeEventListener('focusout', this.handleFocusOut);
+        }
+        this.isClosing = true;
+        setTimeout(() => {
+          this.isClosing = false;
+        }, 50);
+      }
+    });
+    _defineProperty(this, "handleFocusOut", e => {
+      if (this.isClosing) return; // Keep flag for safety
+      const dropdown = document.getElementById('user-menu');
+      // if (!dropdown || !e.relatedTarget || dropdown.contains(e.relatedTarget)) {
+      //   return; // Focus still inside or invalid target
+      // }
+      if (!dropdown || dropdown.classList.contains("hidden") || !e.relatedTarget || dropdown.contains(e.relatedTarget)) {
+        return; // Already closed, still inside, or invalid
+      }
+      // Removed: Skip if focus moving to trigger (this blocked keyboard Shift+Tab)
+      // Close dropdown (reuse existing close logic)
+      dropdown.classList.add("hidden");
+      const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
+      toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
+      // Return focus to trigger button
+      const toggleButton = document.querySelector(".user_custom_login");
+      if (toggleButton) toggleButton.focus();
+      // Clean up listener
+      dropdown.removeEventListener('focusout', this.handleFocusOut);
     });
     this.state = {
       darkLanguages: [],
@@ -395,9 +416,9 @@ class Header extends Component {
       setText: '',
       isMobileMenuOpen: false,
       resumeCourseUrl: null,
-      profileUrl: '',
-      isDropdownOpen: false
+      profileUrl: ''
     };
+    this.isClosing = false;
     this.dropdownRef = /*#__PURE__*/React.createRef();
     this.nonDropdownNodes = []; // Track disabled non-dropdown nodes
     this.focusableSelector = `
@@ -607,10 +628,12 @@ class Header extends Component {
     // Add document click listener
     document.addEventListener('click', this.handleClickOutside);
     document.addEventListener('keydown', this.handleKeyDown);
+    window.addEventListener('pageshow', this.handleBfcacheRestore);
   }
   componentWillUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
     document.removeEventListener('keydown', this.handleKeyDown);
+    window.removeEventListener('pageshow', this.handleBfcacheRestore);
   }
   render() {
     const exploreActive = window.location.href.includes('/explore-courses/') && !window.location.href.includes('/explore-courses/dashboard/');
@@ -750,7 +773,7 @@ class Header extends Component {
       className: "toggle-user-dropdown",
       role: "button",
       "aria-label": "Options Menu",
-      "aria-expanded": this.state.isDropdownOpen ? "true" : "false",
+      "aria-expanded": "false",
       tabIndex: -1,
       "aria-controls": "user-menu",
       onClick: this.handleDropdownToggle,
@@ -760,28 +783,8 @@ class Header extends Component {
           this.handleDropdownToggle(e);
         }
       }
-    }, /*#__PURE__*/React.createElement(CaretDropDownIcon, null)), /*#__PURE__*/React.createElement(FocusTrap, {
-      active: this.state.isDropdownOpen,
-      focusTrapOptions: {
-        escapeDeactivates: true,
-        // Close on ESC
-        clickOutsideDeactivates: true,
-        // Close on outside click
-        onDeactivate: () => {
-          this.setState({
-            isDropdownOpen: false
-          });
-          const userMenu = document.getElementById("user-menu");
-          if (userMenu) userMenu.classList.add("hidden");
-          const toggleButtons = document.querySelectorAll(".toggle-user-dropdown");
-          toggleButtons.forEach(btn => btn.setAttribute("aria-expanded", "false"));
-          // Return focus to toggle
-          const toggleButton = document.querySelector('.user_custom_login');
-          if (toggleButton) toggleButton.focus();
-        }
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: `dropdown-user-menu ${this.state.isDropdownOpen ? '' : 'hidden'}`,
+    }, /*#__PURE__*/React.createElement(CaretDropDownIcon, null)), /*#__PURE__*/React.createElement("div", {
+      className: "dropdown-user-menu hidden",
       "aria-label": "More Options",
       role: "menu",
       id: "user-menu",
@@ -808,7 +811,7 @@ class Header extends Component {
     }, /*#__PURE__*/React.createElement("a", {
       href: getConfig().LOGOUT_URL,
       role: "menuitem"
-    }, "Sign Out"))))))), /*#__PURE__*/React.createElement("div", {
+    }, "Sign Out")))))), /*#__PURE__*/React.createElement("div", {
       className: `mobile-menu ${this.state.isMobileMenuOpen ? '' : 'hidden'}`,
       "aria-label": "More",
       role: "menu",
