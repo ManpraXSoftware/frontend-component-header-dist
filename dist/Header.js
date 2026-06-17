@@ -422,13 +422,13 @@ class Header extends Component {
     this.dropdownRef = /*#__PURE__*/React.createRef();
     this.nonDropdownNodes = []; // Track disabled non-dropdown nodes
     this.focusableSelector = `
-      a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), 
-      textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], 
-      [tabindex="0"], area[href], details, summary, iframe, object, embed,
-      li[data-testid="breadcrumb-item"], li[data-testid="breadcrumb-item"] a, 
-      li[data-testid="breadcrumb-item"] button, li[data-testid="breadcrumb-item"] [tabindex],
-      div[class*="sequence-navigation-tabs-container"], div[class*="sequence-navigation-tabs d-flex flex-grow-1"]
-    `.trim(); // Focusable selector for trap
+        a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), 
+        textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], 
+        [tabindex="0"], area[href], details, summary, iframe, object, embed,
+        li[data-testid="breadcrumb-item"], li[data-testid="breadcrumb-item"] a, 
+        li[data-testid="breadcrumb-item"] button, li[data-testid="breadcrumb-item"] [tabindex],
+        div[class*="sequence-navigation-tabs-container"], div[class*="sequence-navigation-tabs d-flex flex-grow-1"]
+      `.trim(); // Focusable selector for trap
   }
   componentDidMount() {
     var darkLang = [];
@@ -439,6 +439,19 @@ class Header extends Component {
       const loginUrl = getConfig().LOGIN_URL;
       window.location.href = loginUrl;
       return; // Stop further execution
+    }
+    const gaId = getConfig().GOOGLE_ANALYTICS_ID;
+    if (gaId && !window.gtag) {
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function gtag() {
+        window.dataLayer.push(arguments);
+      };
+      window.gtag('js', new Date());
+      window.gtag('config', gaId);
+      const gaScript = document.createElement('script');
+      gaScript.async = true;
+      gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+      document.head.appendChild(gaScript);
     }
     if (!this.state.setText) {
       const search_query = new URLSearchParams(location.search).get("text");
