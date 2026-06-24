@@ -823,7 +823,11 @@ class Header extends Component {
       className: "mobile-nav-item dropdown-item dropdown-nav-item"
     }, /*#__PURE__*/React.createElement("a", {
       href: getConfig().LOGOUT_URL,
-      role: "menuitem"
+      role: "menuitem",
+      onClick: e => {
+        e.preventDefault();
+        window.location.href = getConfig().LOGOUT_URL;
+      }
     }, "Sign Out")))))), /*#__PURE__*/React.createElement("div", {
       className: `mobile-menu ${this.state.isMobileMenuOpen ? '' : 'hidden'}`,
       "aria-label": "More",
@@ -858,7 +862,11 @@ class Header extends Component {
       className: "mobile-nav-item dropdown-item dropdown-nav-item mobile-nav-link"
     }, /*#__PURE__*/React.createElement("a", {
       href: getConfig().LOGOUT_URL,
-      role: "menuitem"
+      role: "menuitem",
+      onClick: e => {
+        e.preventDefault();
+        window.location.href = getConfig().LOGOUT_URL;
+      }
     }, "Sign Out"))))));
   }
 }
