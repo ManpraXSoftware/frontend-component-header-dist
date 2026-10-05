@@ -419,13 +419,13 @@ class Header extends Component {
     this.dropdownRef = /*#__PURE__*/React.createRef();
     this.nonDropdownNodes = []; // Track disabled non-dropdown nodes
     this.focusableSelector = `
-        a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), 
-        textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], 
-        [tabindex="0"], area[href], details, summary, iframe, object, embed,
-        li[data-testid="breadcrumb-item"], li[data-testid="breadcrumb-item"] a, 
-        li[data-testid="breadcrumb-item"] button, li[data-testid="breadcrumb-item"] [tabindex],
-        div[class*="sequence-navigation-tabs-container"], div[class*="sequence-navigation-tabs d-flex flex-grow-1"]
-      `.trim(); // Focusable selector for trap
+      a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), 
+      textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], 
+      [tabindex="0"], area[href], details, summary, iframe, object, embed,
+      li[data-testid="breadcrumb-item"], li[data-testid="breadcrumb-item"] a, 
+      li[data-testid="breadcrumb-item"] button, li[data-testid="breadcrumb-item"] [tabindex],
+      div[class*="sequence-navigation-tabs-container"], div[class*="sequence-navigation-tabs d-flex flex-grow-1"]
+    `.trim(); // Focusable selector for trap
   }
   componentDidMount() {
     var darkLang = [];
@@ -468,6 +468,13 @@ class Header extends Component {
     }
     const jf = document.createElement('script');
     const mx_localizekey = Array.isArray(getConfig().MX_LOCALIZEKEY) ? getConfig().MX_LOCALIZEKEY[0] : getConfig().MX_LOCALIZEKEY;
+
+    // Translation provider switch: "localize" (default) or "a4i"
+    const cfg = k => {
+      const v = getConfig()[k];
+      return Array.isArray(v) ? v[0] : v;
+    };
+    const isLocalize = (cfg('MX_TRANSLATION_PROVIDER') || 'localize') !== 'a4i';
     const show_user_way = getConfig().SHOW_USER_WAY[0];
     if (show_user_way == "True") {
       const script = document.createElement('script');
@@ -487,19 +494,6 @@ class Header extends Component {
     jqueryScript.src = "https://code.jquery.com/jquery-3.7.1.js";
     jqueryScript.integrity = "sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=";
     jqueryScript.crossOrigin = "anonymous";
-    const localizeInnerText = document.createElement("script");
-    localizeInnerText.innerText = !function (a) {
-      if (!a.Localize) {
-        a.Localize = {};
-        for (var e = ["translate", "untranslate", "phrase", "initialize", "translatePage", "setLanguage", "getLanguage", "getSourceLanguage", "detectLanguage", "getAvailableLanguages", "untranslatePage", "bootstrap", "prefetch", "on", "off", "hideWidget", "showWidget"], t = 0; t < e.length; t++) a.Localize[e[t]] = function () {};
-      }
-    }(window);
-    const localizeKey = document.createElement("script");
-    localizeKey.innerText = Localize.initialize({
-      key: mx_localizekey,
-      rememberLanguage: true,
-      retranslateOnNewPhrases: true
-    });
     const langSelect = document.createElement("select");
     langSelect.id = "langOptions";
     langSelect.className = "myLang";
@@ -507,50 +501,75 @@ class Header extends Component {
     langSelect.ariaLabel = "Selected language";
     parentDiv.append(jf);
     parentDiv.append(jqueryScript);
-    parentDiv.append(localizeInnerText);
-    parentDiv.append(localizeKey);
-    parentDiv.append(langSelect);
     const bodyDiv = document.body;
-    bodyDiv.append(localizeScript);
-    langSelect.addEventListener('change', this.handleLangOptionsClick);
-    let selectTag = document.getElementById("langOptions");
-    const lang_dict = [];
-    localizeScript.onload = () => {
-      console.log("initialing localizer ...");
-      Localize.initialize({
+    if (isLocalize) {
+      const localizeInnerText = document.createElement("script");
+      localizeInnerText.innerText = !function (a) {
+        if (!a.Localize) {
+          a.Localize = {};
+          for (var e = ["translate", "untranslate", "phrase", "initialize", "translatePage", "setLanguage", "getLanguage", "getSourceLanguage", "detectLanguage", "getAvailableLanguages", "untranslatePage", "bootstrap", "prefetch", "on", "off", "hideWidget", "showWidget"], t = 0; t < e.length; t++) a.Localize[e[t]] = function () {};
+        }
+      }(window);
+      const localizeKey = document.createElement("script");
+      localizeKey.innerText = Localize.initialize({
         key: mx_localizekey,
         rememberLanguage: true,
         retranslateOnNewPhrases: true
       });
-      Localize.getAvailableLanguages((error, data) => {
-        if (error) {
-          console.error('Error fetching available languages:', error);
-        } else {
-          data.map((e, i) => {
-            var lang_name = e.name;
-            if (e.code == "hi-IN" || e.code == "hi") {
-              lang_name = e.name + "(Hindi)";
-            } else if (e.code == "kn") {
-              lang_name = e.name + "(Kannada)";
-            } else if (e.code == "bn") {
-              lang_name = e.name + "(Bangali)";
-            } else if (e.code == "en") {
-              lang_name = e.name + "(English)";
-            } else if (e.code == "ta-IN") {
-              lang_name = "தமிழ்(Tamil)";
-            } else if (e.code == "or") {
-              lang_name = e.name + "(Odia)";
-            } else if (e.code == "ml-IN" || e.code == "ml") {
-              lang_name = e.name + "(Malayalam)";
-            }
-            lang_dict.push({
-              "name": lang_name,
-              "code": e.code
+      parentDiv.append(localizeInnerText);
+      parentDiv.append(localizeKey);
+      parentDiv.append(langSelect);
+      bodyDiv.append(localizeScript);
+      langSelect.addEventListener('change', this.handleLangOptionsClick);
+    } else if (!document.getElementById('a4i-sdk')) {
+      const a4iScript = document.createElement('script');
+      a4iScript.id = 'a4i-sdk';
+      a4iScript.src = cfg('A4I_SDK_URL');
+      a4iScript.setAttribute('data-site-id', cfg('A4I_SITE_ID'));
+      a4iScript.setAttribute('data-api-base', cfg('A4I_API_BASE'));
+      a4iScript.defer = true;
+      bodyDiv.append(a4iScript);
+    }
+    let selectTag = document.getElementById("langOptions");
+    const lang_dict = [];
+    const onTranslatorReady = () => {
+      if (isLocalize) {
+        console.log("initialing localizer ...");
+        Localize.initialize({
+          key: mx_localizekey,
+          rememberLanguage: true,
+          retranslateOnNewPhrases: true
+        });
+        Localize.getAvailableLanguages((error, data) => {
+          if (error) {
+            console.error('Error fetching available languages:', error);
+          } else {
+            data.map((e, i) => {
+              var lang_name = e.name;
+              if (e.code == "hi-IN" || e.code == "hi") {
+                lang_name = e.name + "(Hindi)";
+              } else if (e.code == "kn") {
+                lang_name = e.name + "(Kannada)";
+              } else if (e.code == "bn") {
+                lang_name = e.name + "(Bangali)";
+              } else if (e.code == "en") {
+                lang_name = e.name + "(English)";
+              } else if (e.code == "ta-IN") {
+                lang_name = "தமிழ்(Tamil)";
+              } else if (e.code == "or") {
+                lang_name = e.name + "(Odia)";
+              } else if (e.code == "ml-IN" || e.code == "ml") {
+                lang_name = e.name + "(Malayalam)";
+              }
+              lang_dict.push({
+                "name": lang_name,
+                "code": e.code
+              });
             });
-          });
-          console.log('Available languages:', data);
-        }
-      });
+            console.log('Available languages:', data);
+          }
+        });
+      }
       axios.get(getConfig().LMS_BASE_URL + `/mx-user-info/get_user_profile?email=${authenticatedUser.email}`).then(res => {
         document.getElementById("header-username").innerText = res.data.username;
         document.getElementById("profileimageid").src = getConfig().LMS_BASE_URL + res.data.profileImage.medium;
@@ -598,27 +617,36 @@ class Header extends Component {
         this.setState({
           languages: lang_dict
         });
-        this.state.languages.map((lang, i) => {
-          var option = new Option(lang.name, lang.code);
-          selectTag.append(option);
-        });
-        const options = selectTag.options;
-        for (let i = 0; i < options.length; i++) {
-          if (current_lang == options[i].value) {
-            options[i].setAttribute("selected", true);
-            Localize.setLanguage(current_lang);
-            Cookies.set('lang', current_lang, {
-              domain: getConfig().SITE_DOMAIN[0],
-              path: '/',
-              secure: false,
-              sameSite: "Lax"
-            });
-          } else {
-            options[i].removeAttribute("selected", true);
+        if (selectTag) {
+          this.state.languages.map((lang, i) => {
+            var option = new Option(lang.name, lang.code);
+            selectTag.append(option);
+          });
+          const options = selectTag.options;
+          for (let i = 0; i < options.length; i++) {
+            if (current_lang == options[i].value) {
+              options[i].setAttribute("selected", true);
+              Localize.setLanguage(current_lang);
+              Cookies.set('lang', current_lang, {
+                domain: getConfig().SITE_DOMAIN[0],
+                path: '/',
+                secure: false,
+                sameSite: "Lax"
+              });
+            } else {
+              options[i].removeAttribute("selected", true);
+            }
           }
         }
       });
     };
+
+    // Profile/username loading must run with either provider
+    if (isLocalize) {
+      localizeScript.onload = onTranslatorReady;
+    } else {
+      onTranslatorReady();
+    }
     this.setState({
       darkLanguages: darkLang
     });
