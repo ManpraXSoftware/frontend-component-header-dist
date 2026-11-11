@@ -413,19 +413,20 @@ class Header extends Component {
       setText: '',
       isMobileMenuOpen: false,
       resumeCourseUrl: null,
-      profileUrl: ''
+      profileUrl: '',
+      canCreateCourse: false
     };
     this.isClosing = false;
     this.dropdownRef = /*#__PURE__*/React.createRef();
     this.nonDropdownNodes = []; // Track disabled non-dropdown nodes
     this.focusableSelector = `
-      a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), 
-      textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], 
-      [tabindex="0"], area[href], details, summary, iframe, object, embed,
-      li[data-testid="breadcrumb-item"], li[data-testid="breadcrumb-item"] a, 
-      li[data-testid="breadcrumb-item"] button, li[data-testid="breadcrumb-item"] [tabindex],
-      div[class*="sequence-navigation-tabs-container"], div[class*="sequence-navigation-tabs d-flex flex-grow-1"]
-    `.trim(); // Focusable selector for trap
+        a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), 
+        textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"], 
+        [tabindex="0"], area[href], details, summary, iframe, object, embed,
+        li[data-testid="breadcrumb-item"], li[data-testid="breadcrumb-item"] a, 
+        li[data-testid="breadcrumb-item"] button, li[data-testid="breadcrumb-item"] [tabindex],
+        div[class*="sequence-navigation-tabs-container"], div[class*="sequence-navigation-tabs d-flex flex-grow-1"]
+      `.trim(); // Focusable selector for trap
   }
   componentDidMount() {
     var darkLang = [];
@@ -589,7 +590,8 @@ class Header extends Component {
         ;
         this.setState({
           resumeCourseUrl: res.data.resume_block || null,
-          profileUrl: `${getConfig().ACCOUNT_PROFILE_URL}/u/${res.data.username}`
+          profileUrl: `${getConfig().ACCOUNT_PROFILE_URL}/u/${res.data.username}`,
+          canCreateCourse: !!res.data.can_create_course
         });
         for (let i = 0; i < res.data.dark_languages.length; i++) {
           var code = res.data.dark_languages[i][0];
@@ -853,7 +855,12 @@ class Header extends Component {
     }, /*#__PURE__*/React.createElement("a", {
       href: getConfig().ACCOUNT_SETTINGS_URL,
       role: "menuitem"
-    }, "Account")), /*#__PURE__*/React.createElement("div", {
+    }, "Account")), this.state.canCreateCourse && /*#__PURE__*/React.createElement("div", {
+      className: "mobile-nav-item dropdown-item dropdown-nav-item"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: `${getConfig().STUDIO_BASE_URL}/docx-admin/mx_importcoursedocx/importcoursefromdocx/`,
+      role: "menuitem"
+    }, "Create Course")), /*#__PURE__*/React.createElement("div", {
       className: "mobile-nav-item dropdown-item dropdown-nav-item"
     }, /*#__PURE__*/React.createElement("a", {
       href: getConfig().LOGOUT_URL,
@@ -892,7 +899,12 @@ class Header extends Component {
     }, /*#__PURE__*/React.createElement("a", {
       href: getConfig().ACCOUNT_SETTINGS_URL,
       role: "menuitem"
-    }, "Account")), /*#__PURE__*/React.createElement("div", {
+    }, "Account")), this.state.canCreateCourse && /*#__PURE__*/React.createElement("div", {
+      className: "mobile-nav-item dropdown-item dropdown-nav-item mobile-nav-link"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: `${getConfig().STUDIO_BASE_URL}/docx-admin/mx_importcoursedocx/importcoursefromdocx/`,
+      role: "menuitem"
+    }, "Create Course")), /*#__PURE__*/React.createElement("div", {
       className: "mobile-nav-item dropdown-item dropdown-nav-item mobile-nav-link"
     }, /*#__PURE__*/React.createElement("a", {
       href: getConfig().LOGOUT_URL,
